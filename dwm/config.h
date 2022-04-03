@@ -2,26 +2,27 @@
 #include <X11/XF86keysym.h>
 
 /* appearance */
-static const unsigned int borderpx  = 5;        /* border pixel of windows */
-static const unsigned int gappx     = 0;        /* gaps between windows */
-static const unsigned int snap      = 32;       /* snap pixel */
-static const int showbar            = 0;        /* 0 means no bar */
-static const int topbar             = 1;        /* 0 means bottom bar */
-static const char *fonts[]          = { "monospace:size=14" };
-static const char *colors[][3]      = {
-	/*               fg         bg         border   */
+static const unsigned int borderpx = 5; /* border pixel of windows */
+static const unsigned int snap = 32;    /* snap pixel */
+static const int showbar = 0;           /* 0 means no bar */
+static const int topbar = 1;            /* 0 means bottom bar */
+static const char *fonts[] = {"monospace:size=14"};
+static const char *colors[][3] = {
+    /*               fg         bg         border   */
     [SchemeNorm] = {"#d4be98", "#282828", "#282828"},
     [SchemeSel] = {"#7daea3", "#282828", "#a9b665"},
 };
 
 /* tagging */
-static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+static const char *tags[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
 
 /* layout(s) */
-static const float mfact     = 0.5; /* factor of master area size [0.05..0.95] */
-static const int nmaster     = 1;    /* number of clients in master area */
-static const int resizehints = 0;    /* 1 means respect size hints in tiled resizals */
-static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
+static const float mfact = 0.5; /* factor of master area size [0.05..0.95] */
+static const int nmaster = 1;   /* number of clients in master area */
+static const int resizehints =
+    0; /* 1 means respect size hints in tiled resizals */
+static const int lockfullscreen =
+    1; /* 1 will force focus on the fullscreen window */
 
 static const Layout layouts[] = {
     /* symbol     arrange function */
@@ -48,7 +49,7 @@ static const Layout layouts[] = {
   }
 
 static Key keys[] = {
-	/* modifier                     key        function        argument */
+    /* modifier                     key        function        argument */
     {MODKEY, XK_b, togglebar, {0}},
     {MODKEY, XK_space, spawn, SHCMD("dmenu_run")},
     {MODKEY, XK_c, spawn, SHCMD("chromium")},
@@ -72,9 +73,6 @@ static Key keys[] = {
     {MODKEY, XK_h, setmfact, {.f = -0.05}},
     {MODKEY, XK_l, setmfact, {.f = +0.05}},
     {MODKEY, XK_Tab, view, {0}},
-    {MODKEY, XK_minus, setgaps, {.i = -5 }},
-    {MODKEY, XK_equal, setgaps, {.i = +5 }},
-    {MODKEY|ShiftMask, XK_equal, setgaps, {.i = 0  }},
 
     /* Multiple monitors */
     {MODKEY, XK_comma, focusmon, {.i = -1}},
@@ -91,8 +89,8 @@ static Key keys[] = {
     {0, XF86XK_MonBrightnessDown, spawn, SHCMD("lown")},
     {0, XF86XK_AudioRaiseVolume, spawn, SHCMD("vup")},
     {0, XF86XK_AudioLowerVolume, spawn, SHCMD("vown")},
-    {0, XF86XK_AudioMute, spawn, SHCMD("vtog")},
-    {0, XF86XK_AudioPlay, spawn, SHCMD("tog")},
+    {0, XF86XK_AudioMute, spawn, SHCMD("vute")},
+    {0, XF86XK_AudioPlay, spawn, SHCMD("vtog")},
 
     TAGKEYS(XK_1, 0) TAGKEYS(XK_2, 1) TAGKEYS(XK_3, 2) TAGKEYS(XK_4, 3)
         TAGKEYS(XK_5, 4) TAGKEYS(XK_6, 5) TAGKEYS(XK_7, 6) TAGKEYS(XK_8, 7)
