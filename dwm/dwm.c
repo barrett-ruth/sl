@@ -675,7 +675,7 @@ void drawbar(Monitor *m) {
     return;
 
   /* draw status first so it can be overdrawn by tags later */
-  if (m == selmon) { /* status is only drawn on selected monitor */
+  if (m == selmon || 1) { /* status is only drawn on selected monitor */
     drw_setscheme(drw, scheme[SchemeNorm]);
     tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
     drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
@@ -1498,14 +1498,13 @@ void tile(Monitor *m) {
        c = nexttiled(c->next), i++)
     if (i < m->nmaster) {
       h = (m->wh - my) / (MIN(n, m->nmaster) - i);
-      resize(c, m->wx, m->wy + my, mw - (2 * c->bw),
-             h - (2 * c->bw), 0);
+      resize(c, m->wx, m->wy + my, mw - (2 * c->bw), h - (2 * c->bw), 0);
       if (my + HEIGHT(c) < m->wh)
         my += HEIGHT(c);
     } else {
       h = (m->wh - ty) / (n - i);
-      resize(c, m->wx + mw, m->wy + ty,
-             m->ww - mw - (2 * c->bw), h - (2 * c->bw), 0);
+      resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2 * c->bw),
+             h - (2 * c->bw), 0);
       if (ty + HEIGHT(c) < m->wh)
         ty += HEIGHT(c);
     }
@@ -1786,9 +1785,11 @@ void updatesizehints(Client *c) {
 }
 
 void updatestatus(void) {
+  Monitor *m;
   if (!gettextprop(root, XA_WM_NAME, stext, sizeof(stext)))
     strcpy(stext, "dwm-" VERSION);
-  drawbar(selmon);
+  for (m = mons; m; m = m->next)
+    drawbar(m);
 }
 
 void updatetitle(Client *c) {
