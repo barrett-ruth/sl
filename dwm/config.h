@@ -14,7 +14,7 @@ static const char *colors[][3] = {
 };
 
 /* tagging */
-static const char *tags[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
+static const char *tags[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
 
 /* layout(s) */
 static const float mfact = 0.5; /* factor of master area size [0.05..0.95] */
@@ -56,9 +56,10 @@ static Key keys[] = {
     {MODKEY, XK_Return, spawn, SHCMD("st")},
 
     /* Scripts */
+    {SCRIPT, XK_d, spawn, SHCMD("smo; sbg")},
     {SCRIPT, XK_e, spawn, SHCMD("edf")},
     {SCRIPT, XK_h, spawn, SHCMD("pacmd set-default-sink 3")},
-    {SCRIPT, XK_m, spawn, SHCMD("smon; sbg")},
+    {SCRIPT, XK_m, spawn, SHCMD("mus")},
     {SCRIPT, XK_p, spawn, SHCMD("pw")},
     {SCRIPT, XK_r, spawn, SHCMD("rbt")},
     {SCRIPT, XK_s, spawn, SHCMD("sdn")},
