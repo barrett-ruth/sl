@@ -1,6 +1,7 @@
 #!/bin/sh
 
-sink="$(sink)"
+sink="$(pacmd list-sinks | grep '\* index: ' | tail -c 2)"
+
 vol=$(pactl get-sink-volume "$sink" | awk '{ print $5 }')
 [ "$(pactl get-sink-mute "$sink" | awk '{ print $2 }')" = 'yes' ] && muted='!'
 out="${vol%?}$muted"

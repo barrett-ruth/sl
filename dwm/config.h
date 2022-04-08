@@ -85,12 +85,12 @@ static Key keys[] = {
     {MODKEYS, XK_q, quit, {0}},
 
     /* Fn keys */
-    {0, XF86XK_MonBrightnessUp, spawn, SHCMD("lup")},
-    {0, XF86XK_MonBrightnessDown, spawn, SHCMD("lown")},
-    {0, XF86XK_AudioRaiseVolume, spawn, SHCMD("vup")},
-    {0, XF86XK_AudioLowerVolume, spawn, SHCMD("vown")},
-    {0, XF86XK_AudioMute, spawn, SHCMD("vute")},
-    {0, XF86XK_AudioPlay, spawn, SHCMD("vtog")},
+    {0, XF86XK_MonBrightnessUp, spawn, SHCMD("luz up")},
+    {0, XF86XK_MonBrightnessDown, spawn, SHCMD("luz down")},
+    {0, XF86XK_AudioRaiseVolume, spawn, SHCMD("vol up")},
+    {0, XF86XK_AudioLowerVolume, spawn, SHCMD("vol down")},
+    {0, XF86XK_AudioMute, spawn, SHCMD("vol mute")},
+    {0, XF86XK_AudioPlay, spawn, SHCMD("vol toggle")},
 
     TAGKEYS(XK_1, 0) TAGKEYS(XK_2, 1) TAGKEYS(XK_3, 2) TAGKEYS(XK_4, 3)
         TAGKEYS(XK_5, 4) TAGKEYS(XK_6, 5) TAGKEYS(XK_7, 6) TAGKEYS(XK_8, 7)

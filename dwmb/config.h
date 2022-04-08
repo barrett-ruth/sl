@@ -3,8 +3,6 @@ static const Block blocks[] = {
     {"", SCRIPT("bat.sh"), 5, 0},
     {"", SCRIPT("vol.sh"), 0, 5},
     {"", SCRIPT("luz.sh"), 0, 7},
-    // {"", SCRIPT("cpu.sh"), 10, 0},
-    // {"", SCRIPT("space.sh"), 10, 0},
     {"", SCRIPT("wifi.sh"), 5, 10},
     {"", SCRIPT("date.sh"), 5, 0}};
 
