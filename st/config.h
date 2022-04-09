@@ -7,7 +7,6 @@
  */
 static char *font =
     "FiraCode Nerd Font Mono:pixelsize=40:antialias=true:autohint=true";
-static char *font2 = "Font Awesome 6 Free:pixelsize=40:antialias=true:autohint=true";
 static int borderpx = 3;
 
 static char *shell = "/bin/sh";
