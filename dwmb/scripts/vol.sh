@@ -3,10 +3,11 @@
 sink="$(pacmd list-sinks | grep '\* index: ' | tail -c 2)"
 
 vol=$(pactl get-sink-volume "$sink" | awk '{ print $5 }')
-[ "$(pactl get-sink-mute "$sink" | awk '{ print $2 }')" = 'yes' ] && muted='!'
-out="${vol%?}$muted"
-out=" V:${out:-n/a}"
+vol="${vol%?}"
+[ "$vol" -gt 49 ] && icon= || icon=
+[ "$(pactl get-sink-mute "$sink" | awk '{ print $2 }')" = 'yes' ] && icon=
+vol=" $icon ${vol:-n/a}"
 
-echo "^b#504945^^c#d4be98^$out"
+echo "^b#504945^^c#d4be98^$vol"
 
-unset vol muted out sink
+unset vol muted sink
