@@ -204,8 +204,8 @@ static Shortcut shortcuts[] = {
     {TERMMODS, XK_K, kscrollup, {.i = 9}},
 
     // Urls
-    {SCRIPT, XK_c, externalpipe, SHCMD("urlc")},
-    {SCRIPT, XK_o, externalpipe, SHCMD("urlo")},
+    {SCRIPT, XK_c, externalpipe, SHCMD("url copy")},
+    {SCRIPT, XK_o, externalpipe, SHCMD("url open")},
 };
 
 static KeySym mappedkeys[] = {-1};
