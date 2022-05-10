@@ -20,12 +20,12 @@ final_bar() {
 test -f /tmp/bat && cp /tmp/bat /tmp/battmp || touch /tmp/bat
 
 while read -r line; do
-    [ $bat -gt "$line" ] && rg -v "$line" /tmp/battmp >/tmp/bat
+    [ $bat -gt "$line" ] && rg -v -x "$line" /tmp/battmp >/tmp/bat
 done </tmp/battmp
 
 case "$bat" in
 50 | 30 | 20 | 10 | 5)
-    if [ ! "$(rg "$bat" /tmp/bat)" ]; then
+    if [ ! "$(rg -x "$bat" /tmp/bat)" ]; then
         dunstify -r 3 -i "$filler_icon" -u critical "$(final_bar)B"
         echo "$bat" >>/tmp/bat
     fi
