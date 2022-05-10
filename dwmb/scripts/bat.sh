@@ -17,14 +17,21 @@ final_bar() {
     echo " $(format_chars "$bat")$spacing$bat"
 }
 
+test -f /tmp/bat && cp /tmp/bat /tmp/battmp || touch /tmp/bat
+
+while read -r line; do
+    [ $bat -gt "$line" ] && rg -v "$line" /tmp/battmp >/tmp/bat
+done </tmp/battmp
+
 case "$bat" in
 50 | 30 | 20 | 10 | 5)
-    dunstify -r 3 -i "$filler_icon" -u critical "$(final_bar)B"
+    if [ ! "$(rg "$bat" /tmp/bat)" ]; then
+        dunstify -r 3 -i "$filler_icon" -u critical "$(final_bar)B"
+        echo "$bat" >>/tmp/bat
+    fi
     ;;
 esac
 
 bat="^c#d4be98^$bat%"
 
 echo "$bat "
-
-unset bat
