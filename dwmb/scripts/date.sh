@@ -1,7 +1,7 @@
 #!/bin/sh
 
 dt="$(date '+%a %d/%m/%+4Y')"
-dt="  ^c#3c3836^^b#a89984^$dt"
+dt="^b#a89984^^c#3c3836^ $dt"
 
 echo "$dt "
 
