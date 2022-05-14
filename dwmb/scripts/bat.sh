@@ -22,7 +22,7 @@ final_bar() {
     echo " $(format_chars "$bat")$spacing$bat"
 }
 
-test -f /tmp/bat || touch /tmp/bat
+test -f /tmp/bat && cp /tmp/bat /tmp/battmp || touch /tmp/bat
 test -f /tmp/battmp || touch /tmp/battmp
 
 while read -r line; do
