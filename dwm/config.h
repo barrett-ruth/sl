@@ -68,6 +68,8 @@ static Key keys[] = {
     /* Window altering */
     {MODKEY, XK_a, focusstack, {.i = -1}},
     {MODKEY, XK_f, focusstack, {.i = +1}},
+    {MODKEY, XK_i, incnmaster, {.i = +1}},
+    {MODKEY, XK_o, incnmaster, {.i = -1}},
     {MODKEY, XK_u, movestack, {.i = -1}},
     {MODKEY, XK_d, movestack, {.i = +1}},
     {MODKEYS, XK_Return, zoom, {0}},
