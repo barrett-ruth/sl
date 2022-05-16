@@ -6,5 +6,3 @@ ssid="${ssid:-n/a}"
 ssid="^c#d4be98^^b#504945^ $ssid"
 
 echo "$ssid "
-
-unset ssid
