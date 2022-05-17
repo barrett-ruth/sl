@@ -235,13 +235,13 @@ static void showhide(Client *c);
 static void sigchld(int unused);
 static void spawn(const Arg *arg);
 static void tag(const Arg *arg);
+static void tagview(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void tile(Monitor *);
 static void togglebar(const Arg *arg);
 static void toggleborders(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void toggletag(const Arg *arg);
-static void toggleview(const Arg *arg);
 static void unfocus(Client *c, int setfocus);
 static void unmanage(Client *c, int destroyed);
 static void unmapnotify(XEvent *e);
@@ -1597,6 +1597,11 @@ void tagmon(const Arg *arg) {
   sendmon(selmon->sel, dirtomon(arg->i));
 }
 
+void tagview(const Arg *arg) {
+  tag(arg);
+  view(arg);
+}
+
 void tile(Monitor *m) {
   unsigned int i, n, h, mw, my, ty;
   Client *c;
@@ -1665,17 +1670,6 @@ void toggletag(const Arg *arg) {
   newtags = selmon->sel->tags ^ (arg->ui & TAGMASK);
   if (newtags) {
     selmon->sel->tags = newtags;
-    focus(NULL);
-    arrange(selmon);
-  }
-}
-
-void toggleview(const Arg *arg) {
-  unsigned int newtagset =
-      selmon->tagset[selmon->seltags] ^ (arg->ui & TAGMASK);
-
-  if (newtagset) {
-    selmon->tagset[selmon->seltags] = newtagset;
     focus(NULL);
     arrange(selmon);
   }
