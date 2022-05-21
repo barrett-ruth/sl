@@ -1,7 +1,6 @@
 #!/bin/sh
 
 bat="$(cat /sys/class/power_supply/BAT0/capacity)"
-filler_icon='/usr/share/icons/Adwaita/16x16/status/airplane-mode-symbolic.symbolic.png'
 
 leave() {
     echo "^c#d4be98^$bat% "
@@ -34,7 +33,7 @@ done </tmp/battmp
 case "$bat" in
 50 | 30 | 20 | 10 | 5)
     if [ ! "$(rg -x "$bat" /tmp/bat)" ]; then
-        dunstify -r 3 -i "$filler_icon" -u critical "$(final_bar)B"
+        dunstify -r 3 -u critical " $(final_bar)B"
         echo "$bat" >>/tmp/bat
     fi
     ;;
