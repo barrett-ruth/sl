@@ -33,7 +33,8 @@ done </tmp/battmp
 case "$bat" in
 50 | 30 | 20 | 10 | 5)
     if [ ! "$(rg -x "$bat" /tmp/bat)" ]; then
-        dunstify -r 3 -u critical " $(final_bar)B"
+        cat /tmp/bat
+        sdun -r 3 -u critical "' $(final_bar)B'"
         echo "$bat" >>/tmp/bat
     fi
     ;;
