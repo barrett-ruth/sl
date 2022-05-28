@@ -5,7 +5,7 @@
  *
  * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
  */
-static char *font = "scientifica:pixelsize=50:antialias=true";
+static char *font = "scientifica:pixelsize=51:antialias=true";
 static int borderpx = 3;
 
 static char *shell = "/bin/sh";
