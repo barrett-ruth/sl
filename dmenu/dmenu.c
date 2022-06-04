@@ -11,8 +11,6 @@
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#ifdef XINERAMA
-#endif
 #include <X11/Xft/Xft.h>
 
 #include "drw.h"
@@ -715,11 +713,6 @@ int main(int argc, char *argv[]) {
   if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
     die("no fonts could be loaded.");
   lrpad = drw->fonts->h;
-
-#ifdef __OpenBSD__
-  if (pledge("stdio rpath", NULL) == -1)
-    die("pledge");
-#endif
 
   if (fast && !isatty(0)) {
     grabkeyboard();

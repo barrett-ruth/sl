@@ -20,13 +20,7 @@
 #include "st.h"
 #include "win.h"
 
-#if defined(__linux)
 #include <pty.h>
-#elif defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
-#include <util.h>
-#elif defined(__FreeBSD__) || defined(__DragonFly__)
-#include <libutil.h>
-#endif
 
 /* Arbitrary sizes */
 #define UTF_INVALID 0xFFFD
@@ -750,17 +744,9 @@ int ttynew(const char *line, char *cmd, const char *out, char **args) {
       die("ioctl TIOCSCTTY failed: %s\n", strerror(errno));
     if (s > 2)
       close(s);
-#ifdef __OpenBSD__
-    if (pledge("stdio getpw proc exec", NULL) == -1)
-      die("pledge\n");
-#endif
     execsh(cmd, args);
     break;
   default:
-#ifdef __OpenBSD__
-    if (pledge("stdio rpath tty proc", NULL) == -1)
-      die("pledge\n");
-#endif
     close(s);
     cmdfd = m;
     signal(SIGCHLD, sigchld);
