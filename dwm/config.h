@@ -9,8 +9,8 @@ static const int topbar = 1;            /* 0 means bottom bar */
 static const char *fonts[] = {"monospace:size=14"};
 static const char *colors[][3] = {
     /*               fg         bg         border   */
-    [SchemeNorm] = {"#d4be98", "#3c3836", "#3c3836"},
-    [SchemeSel] = {"#3c3836", "#a89984", "#a89984"},
+    [SchemeNorm] = {"#d4be98", "#282828", "#282828"},
+    [SchemeSel] = {"#282828", "#a89984", "#a89984"},
 };
 
 /* tagging */

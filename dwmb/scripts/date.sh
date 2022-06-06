@@ -1,6 +1,5 @@
 #!/bin/sh
 
-dt="$(date '+%R  %a %d/%m/%+4Y')"
-dt="^b#a89984^^c#3c3836^ $dt"
+dt="$(date '+%R │ %a %d/%m/%+4Y')"
 
-echo "$dt "
+echo "^b#a89984^^c#282828^ $dt "

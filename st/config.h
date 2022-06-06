@@ -6,7 +6,7 @@
  * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
  */
 static char *font = "monospace:pixelsize=51:antialias=true";
-static int borderpx = 3;
+static int borderpx = 5;
 
 static char *shell = "/bin/sh";
 char *utmp = NULL;
@@ -98,7 +98,7 @@ static const char *colorname[] = {
     [7] = "#d4be98", /* white   */
 
     /* 8 bright colors */
-    [8] = "#282828",
+    [8] = "#1d2021",
     [9] = "#ea6962",  /* red     */
     [10] = "#a9b665", /* green   */
     [11] = "#d8a657", /* yellow  */
@@ -217,7 +217,8 @@ static uint ignoremod = Mod2Mask | XK_SWITCH_MOD;
 
 static Key key[] = {
     /* keysym           mask            string      appkey appcursor */
-    {XK_Shift_R, XK_NO_MOD, "", 0, 0},
+    {XK_Shift_R, XK_NO_MOD, "", 0, 0},
+    {XK_Super_L, XK_NO_MOD, "", 0, 0},
 
     {XK_KP_Home, ShiftMask, "\033[2J", 0, -1},
     {XK_KP_Home, ShiftMask, "\033[1;2H", 0, +1},
