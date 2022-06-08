@@ -50,7 +50,7 @@ static const Layout layouts[] = {
 
 static Key keys[] = {
     {MODKEY, XK_b, togglebar, {0}},
-    {MODKEY, XK_c, spawn, SHCMD("chromium")},
+    {MODKEY, XK_w, spawn, SHCMD("qutebrowser")},
     {MODKEY, XK_space, spawn, SHCMD("dmenu_run")},
     {MODKEY, XK_Return, spawn, SHCMD("st")},
 

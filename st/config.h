@@ -199,8 +199,10 @@ static Shortcut shortcuts[] = {
     {TERMMODS, XK_L, zoom, {.f = +5}},
 
     // Scroll
-    {TERMMODS, XK_J, kscrolldown, {.i = 9}},
-    {TERMMODS, XK_K, kscrollup, {.i = 9}},
+    {TERMMOD, XK_j, kscrolldown, {.i = 9}},
+    {TERMMOD, XK_k, kscrollup, {.i = 9}},
+    {TERMMODS, XK_J, kscrolldown, {.i = 18}},
+    {TERMMODS, XK_K, kscrollup, {.i = 18}},
 
     // Urls
     {SCRIPT, XK_c, externalpipe, SHCMD("url copy")},

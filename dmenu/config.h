@@ -9,8 +9,8 @@ static const char *prompt =
 static const char *colors[SchemeLast][2] = {
     /*     fg         bg       */
     [SchemeNorm] = {"#d4be98", "#282828"},
-    [SchemeSel] = {"#3c3836", "#a89984"},
-    [SchemeOut] = {"#3c3836", "#a89984"},
+    [SchemeSel] = {"#282828", "#a89984"},
+    [SchemeOut] = {"#282828", "#a89984"},
 };
 /* -l option; if nonzero, dmenu uses vertical list with given number of lines */
 static unsigned int lines = 0;
