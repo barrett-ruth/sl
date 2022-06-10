@@ -145,6 +145,7 @@ struct Monitor {
   int mx, my, mw, mh; /* screen size */
   int wx, wy, ww, wh; /* window area  */
   unsigned int seltags;
+  unsigned int borderpx;
   unsigned int sellt;
   unsigned int tagset[2];
   int showbar;
@@ -238,6 +239,7 @@ static void tagmon(const Arg *arg);
 static void tagview(const Arg *arg);
 static void tile(Monitor *);
 static void togglebar(const Arg *arg);
+static void toggleborders(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void unfocus(Client *c, int setfocus);
@@ -616,6 +618,7 @@ Monitor *createmon(void) {
   m->nmaster = nmaster;
   m->showbar = showbar;
   m->topbar = topbar;
+  m->borderpx = borderpx;
   m->lt[0] = &layouts[0];
   m->lt[1] = &layouts[1 % LENGTH(layouts)];
   strncpy(m->ltsymbol, layouts[0].symbol, sizeof m->ltsymbol);
@@ -1087,7 +1090,7 @@ void manage(Window w, XWindowAttributes *wa) {
               (c->x + (c->w / 2) < c->mon->wx + c->mon->ww))
                  ? bh
                  : c->mon->my);
-  c->bw = borderpx;
+  c->bw = c->mon->borderpx;
 
   wc.border_width = c->bw;
   XConfigureWindow(dpy, w, CWBorderWidth, &wc);
@@ -1645,6 +1648,17 @@ void togglebar(const Arg *arg) {
   updatebarpos(selmon);
   XMoveResizeWindow(dpy, selmon->barwin, selmon->wx, selmon->by, selmon->ww,
                     bh);
+  arrange(selmon);
+}
+
+void toggleborders(const Arg *arg) {
+  selmon->borderpx = selmon->borderpx == 0 ? borderpx : 0;
+
+  for (Client *c = selmon->clients; c; c = c->next) {
+    c->bw = selmon->borderpx;
+    if (c->isfloating || !selmon->lt[selmon->sellt]->arrange)
+      resize(c, c->x, c->y, c->w - (arg->i * 2), c->h - (arg->i * 2), 0);
+  }
   arrange(selmon);
 }
 

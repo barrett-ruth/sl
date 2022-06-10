@@ -141,7 +141,7 @@ static void drawmenu(void) {
   if (lines > 0) {
     /* draw vertical list */
     for (item = curr; item != next; item = item->right)
-      drawitem(item, x, y += bh, mw - x);
+      drawitem(item, x - promptw, y += bh, mw - x + promptw);
   } else if (matches) {
     /* draw horizontal list */
     x += inputw;

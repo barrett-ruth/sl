@@ -59,6 +59,7 @@ static Key keys[] = {
     {SCRIPT, XK_d, spawn, SHCMD("doc")},
     {SCRIPT, XK_r, spawn, SHCMD("rbt")},
     {SCRIPT, XK_s, spawn, SHCMD("sdn")},
+    {SCRIPT, XK_m, spawn, SHCMD("smon")},
 
     /* Window altering */
     {MODKEY, XK_a, focusstack, {.i = -1}},
@@ -67,6 +68,7 @@ static Key keys[] = {
     {MODKEY, XK_o, incnmaster, {.i = -1}},
     {MODKEY, XK_u, movestack, {.i = -1}},
     {MODKEY, XK_d, movestack, {.i = +1}},
+    {MODKEYS, XK_b, toggleborders, {0}},
     {MODKEYS, XK_Return, zoom, {0}},
     {MODKEY, XK_h, setmfact, {.f = -0.05}},
     {MODKEY, XK_l, setmfact, {.f = +0.05}},
@@ -91,8 +93,8 @@ static Key keys[] = {
             TAGKEYS(XK_9, 8){MODKEY | ShiftMask, XK_q, quit, {0}},
 
     /* Layouts */
-    {MODKEY, XK_t, setlayout, {.v = &layouts[0]}},
-    {MODKEY, XK_f, setlayout, {.v = &layouts[1]}},
-    {MODKEY, XK_m, setlayout, {.v = &layouts[2]}},
+    {MODKEYS, XK_t, setlayout, {.v = &layouts[0]}},
+    {MODKEYS, XK_f, setlayout, {.v = &layouts[1]}},
+    {MODKEYS, XK_m, setlayout, {.v = &layouts[2]}},
     {MODKEYS, XK_space, togglefloating, {0}},
 };
