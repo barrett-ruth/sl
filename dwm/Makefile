@@ -1,3 +1,6 @@
+# dwm - dynamic window manager
+# See LICENSE file for copyright and license details.
+
 include config.mk
 
 SRC = drw.c dwm.c util.c
@@ -24,7 +27,7 @@ clean:
 
 dist: clean
 	mkdir -p dwm-${VERSION}
-	cp -R LICENSE Makefile README config.h config.mk\
+	cp -R Makefile README config.h config.mk\
 		dwm.1 drw.h util.h ${SRC} transient.c dwm-${VERSION}
 	tar -cf dwm-${VERSION}.tar dwm-${VERSION}
 	gzip dwm-${VERSION}.tar

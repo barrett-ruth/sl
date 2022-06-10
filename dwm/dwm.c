@@ -36,6 +36,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#ifdef XINERAMA
+#include <X11/extensions/Xinerama.h>
+#endif /* XINERAMA */
 #include <X11/Xft/Xft.h>
 
 #include "drw.h"
@@ -111,7 +114,7 @@ struct Client {
   float mina, maxa;
   int x, y, w, h;
   int oldx, oldy, oldw, oldh;
-  int basew, baseh, incw, inch, maxw, maxh, minw, minh;
+  int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
   int bw, oldbw;
   unsigned int tags;
   int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen;
@@ -142,7 +145,6 @@ struct Monitor {
   int mx, my, mw, mh; /* screen size */
   int wx, wy, ww, wh; /* window area  */
   unsigned int seltags;
-  unsigned int borderpx;
   unsigned int sellt;
   unsigned int tagset[2];
   int showbar;
@@ -232,11 +234,10 @@ static void showhide(Client *c);
 static void sigchld(int unused);
 static void spawn(const Arg *arg);
 static void tag(const Arg *arg);
-static void tagview(const Arg *arg);
 static void tagmon(const Arg *arg);
+static void tagview(const Arg *arg);
 static void tile(Monitor *);
 static void togglebar(const Arg *arg);
-static void toggleborders(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void unfocus(Client *c, int setfocus);
@@ -349,6 +350,8 @@ int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact) {
   if (*w < bh)
     *w = bh;
   if (resizehints || c->isfloating || !c->mon->lt[c->mon->sellt]->arrange) {
+    if (!c->hintsvalid)
+      updatesizehints(c);
     /* see last two sentences in ICCCM 4.1.2.3 */
     baseismin = c->basew == c->minw && c->baseh == c->minh;
     if (!baseismin) { /* temporarily remove base dimensions */
@@ -613,7 +616,6 @@ Monitor *createmon(void) {
   m->nmaster = nmaster;
   m->showbar = showbar;
   m->topbar = topbar;
-  m->borderpx = borderpx;
   m->lt[0] = &layouts[0];
   m->lt[1] = &layouts[1 % LENGTH(layouts)];
   strncpy(m->ltsymbol, layouts[0].symbol, sizeof m->ltsymbol);
@@ -663,6 +665,52 @@ Monitor *dirtomon(int dir) {
     for (m = mons; m->next != selmon; m = m->next)
       ;
   return m;
+}
+
+void drawbar(Monitor *m) {
+  int x, w, tw = 0;
+  unsigned int i, occ = 0, urg = 0;
+  Client *c;
+
+  if (!m->showbar)
+    return;
+
+  /* draw status first so it can be overdrawn by tags later */
+  if (m == selmon || 1) /* status is only drawn on selected monitor */
+    tw = m->ww - drawstatusbar(m, bh, stext);
+
+  for (c = m->clients; c; c = c->next) {
+    occ |= c->tags;
+    if (c->isurgent)
+      urg |= c->tags;
+  }
+  x = 0;
+  for (i = 0; i < LENGTH(tags); i++) {
+    /* Do not draw vacant tags */
+    if (!(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
+      continue;
+    w = TEXTW(tags[i]);
+    drw_setscheme(
+        drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
+    drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
+    x += w;
+  }
+  w = blw = TEXTW(m->ltsymbol);
+  drw_setscheme(drw, scheme[SchemeNorm]);
+  x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
+
+  if ((w = m->ww - tw - x) > bh) {
+    drw_setscheme(drw, scheme[SchemeNorm]);
+    drw_rect(drw, x, 0, w, bh, 1, 1);
+  }
+  drw_map(drw, m->barwin, 0, 0, m->ww, bh);
+}
+
+void drawbars(void) {
+  Monitor *m;
+
+  for (m = mons; m; m = m->next)
+    drawbar(m);
 }
 
 int drawstatusbar(Monitor *m, int bh, char *stext) {
@@ -773,53 +821,6 @@ int drawstatusbar(Monitor *m, int bh, char *stext) {
   free(p);
 
   return ret;
-}
-
-void drawbar(Monitor *m) {
-  int x, w, tw = 0;
-  unsigned int i, occ = 0, urg = 0;
-  Client *c;
-
-  if (!m->showbar)
-    return;
-
-  /* draw status first so it can be overdrawn by tags later */
-  if (m == selmon || 1) { /* status is only drawn on selected monitor */
-    tw = m->ww - drawstatusbar(m, bh, stext);
-  }
-
-  for (c = m->clients; c; c = c->next) {
-    occ |= c->tags;
-    if (c->isurgent)
-      urg |= c->tags;
-  }
-  x = 0;
-  for (i = 0; i < LENGTH(tags); i++) {
-    /* Do not draw vacant tags */
-    if (!(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
-      continue;
-    w = TEXTW(tags[i]);
-    drw_setscheme(
-        drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
-    drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
-    x += w;
-  }
-  w = blw = TEXTW(m->ltsymbol);
-  drw_setscheme(drw, scheme[SchemeNorm]);
-  x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
-
-  if ((w = m->ww - tw - x) > bh) {
-    drw_setscheme(drw, scheme[SchemeNorm]);
-    drw_rect(drw, x, 0, w, bh, 1, 1);
-  }
-  drw_map(drw, m->barwin, 0, 0, m->ww, bh);
-}
-
-void drawbars(void) {
-  Monitor *m;
-
-  for (m = mons; m; m = m->next)
-    drawbar(m);
 }
 
 void enternotify(XEvent *e) {
@@ -1014,6 +1015,17 @@ void incnmaster(const Arg *arg) {
   arrange(selmon);
 }
 
+#ifdef XINERAMA
+static int isuniquegeom(XineramaScreenInfo *unique, size_t n,
+                        XineramaScreenInfo *info) {
+  while (n--)
+    if (unique[n].x_org == info->x_org && unique[n].y_org == info->y_org &&
+        unique[n].width == info->width && unique[n].height == info->height)
+      return 0;
+  return 1;
+}
+#endif /* XINERAMA */
+
 void keypress(XEvent *e) {
   unsigned int i;
   KeySym keysym;
@@ -1075,7 +1087,7 @@ void manage(Window w, XWindowAttributes *wa) {
               (c->x + (c->w / 2) < c->mon->wx + c->mon->ww))
                  ? bh
                  : c->mon->my);
-  c->bw = c->mon->borderpx;
+  c->bw = borderpx;
 
   wc.border_width = c->bw;
   XConfigureWindow(dpy, w, CWBorderWidth, &wc);
@@ -1085,13 +1097,13 @@ void manage(Window w, XWindowAttributes *wa) {
   updatesizehints(c);
   updatewmhints(c);
   c->x = c->mon->mx + (c->mon->mw - WIDTH(c)) / 2;
-  c->y = c->mon->my + (c->mon->mh - HEIGHT(c)) / 2;
+  c->y = c->mon->my + (c->mon->mh - WIDTH(c)) / 2;
   XSelectInput(dpy, w,
                EnterWindowMask | FocusChangeMask | PropertyChangeMask |
                    StructureNotifyMask);
   grabbuttons(c, 0);
   if (!c->isfloating)
-    c->isfloating = c->oldstate = t || c->isfixed;
+    c->isfloating = c->oldstate = trans != None || c->isfixed;
   if (c->isfloating)
     XRaiseWindow(dpy, c->win);
   attach(c);
@@ -1240,7 +1252,7 @@ void propertynotify(XEvent *e) {
         arrange(c->mon);
       break;
     case XA_WM_NORMAL_HINTS:
-      updatesizehints(c);
+      c->hintsvalid = 0;
       break;
     case XA_WM_HINTS:
       updatewmhints(c);
@@ -1636,17 +1648,6 @@ void togglebar(const Arg *arg) {
   arrange(selmon);
 }
 
-void toggleborders(const Arg *arg) {
-  selmon->borderpx = selmon->borderpx == 0 ? borderpx : 0;
-
-  for (Client *c = selmon->clients; c; c = c->next) {
-    c->bw = selmon->borderpx;
-    if (c->isfloating || !selmon->lt[selmon->sellt]->arrange)
-      resize(c, c->x, c->y, c->w - (arg->i * 2), c->h - (arg->i * 2), 0);
-  }
-  arrange(selmon);
-}
-
 void togglefloating(const Arg *arg) {
   if (!selmon->sel)
     return;
@@ -1762,6 +1763,63 @@ void updateclientlist() {
 int updategeom(void) {
   int dirty = 0;
 
+#ifdef XINERAMA
+  if (XineramaIsActive(dpy)) {
+    int i, j, n, nn;
+    Client *c;
+    Monitor *m;
+    XineramaScreenInfo *info = XineramaQueryScreens(dpy, &nn);
+    XineramaScreenInfo *unique = NULL;
+
+    for (n = 0, m = mons; m; m = m->next, n++)
+      ;
+    /* only consider unique geometries as separate screens */
+    unique = ecalloc(nn, sizeof(XineramaScreenInfo));
+    for (i = 0, j = 0; i < nn; i++)
+      if (isuniquegeom(unique, j, &info[i]))
+        memcpy(&unique[j++], &info[i], sizeof(XineramaScreenInfo));
+    XFree(info);
+    nn = j;
+
+    /* new monitors if nn > n */
+    for (i = n; i < nn; i++) {
+      for (m = mons; m && m->next; m = m->next)
+        ;
+      if (m)
+        m->next = createmon();
+      else
+        mons = createmon();
+    }
+    for (i = 0, m = mons; i < nn && m; m = m->next, i++)
+      if (i >= n || unique[i].x_org != m->mx || unique[i].y_org != m->my ||
+          unique[i].width != m->mw || unique[i].height != m->mh) {
+        dirty = 1;
+        m->num = i;
+        m->mx = m->wx = unique[i].x_org;
+        m->my = m->wy = unique[i].y_org;
+        m->mw = m->ww = unique[i].width;
+        m->mh = m->wh = unique[i].height;
+        updatebarpos(m);
+      }
+    /* removed monitors if n > nn */
+    for (i = nn; i < n; i++) {
+      for (m = mons; m && m->next; m = m->next)
+        ;
+      while ((c = m->clients)) {
+        dirty = 1;
+        m->clients = c->next;
+        detachstack(c);
+        c->mon = mons;
+        attach(c);
+        attachstack(c);
+      }
+      if (m == selmon)
+        selmon = mons;
+      cleanupmon(m);
+    }
+    free(unique);
+  } else
+#endif /* XINERAMA */
   {    /* default monitor setup */
     if (!mons)
       mons = createmon();
@@ -1832,12 +1890,15 @@ void updatesizehints(Client *c) {
   } else
     c->maxa = c->mina = 0.0;
   c->isfixed = (c->maxw && c->maxh && c->maxw == c->minw && c->maxh == c->minh);
+  c->hintsvalid = 1;
 }
 
 void updatestatus(void) {
+  Monitor *m;
   if (!gettextprop(root, XA_WM_NAME, stext, sizeof(stext)))
     strcpy(stext, "dwm-" VERSION);
-  drawbar(selmon);
+  for (m = mons; m; m = m->next)
+    drawbar(m);
 }
 
 void updatetitle(Client *c) {
@@ -1962,6 +2023,10 @@ int main(int argc, char *argv[]) {
     die("dwm: cannot open display");
   checkotherwm();
   setup();
+#ifdef __OpenBSD__
+  if (pledge("stdio rpath proc exec", NULL) == -1)
+    die("pledge");
+#endif /* __OpenBSD__ */
   scan();
   run();
   cleanup();

@@ -49,8 +49,9 @@ static const Layout layouts[] = {
   }
 
 static Key keys[] = {
+    /* modifier                     key        function        argument */
     {MODKEY, XK_b, togglebar, {0}},
-    {MODKEY, XK_w, spawn, SHCMD("qutebrowser")},
+    {MODKEY, XK_w, spawn, SHCMD("$BROWSER")},
     {MODKEY, XK_space, spawn, SHCMD("dmenu_run")},
     {MODKEY, XK_Return, spawn, SHCMD("st")},
 
@@ -67,12 +68,11 @@ static Key keys[] = {
     {MODKEY, XK_u, movestack, {.i = -1}},
     {MODKEY, XK_d, movestack, {.i = +1}},
     {MODKEYS, XK_Return, zoom, {0}},
-    {MODKEYS, XK_b, toggleborders, {0}},
     {MODKEY, XK_h, setmfact, {.f = -0.05}},
     {MODKEY, XK_l, setmfact, {.f = +0.05}},
     {MODKEY, XK_Tab, view, {0}},
 
-    /* Multiple monitors */
+    /* Multiple Monitors */
     {MODKEY, XK_comma, focusmon, {.i = -1}},
     {MODKEY, XK_period, focusmon, {.i = +1}},
     {MODKEYS, XK_comma, tagmon, {.i = -1}},
@@ -82,19 +82,17 @@ static Key keys[] = {
     {MODKEY, XK_q, killclient, {0}},
     {MODKEYS, XK_q, quit, {0}},
 
-    /* Fn keys */
+    /* Fn Keys */
     {0, XF86XK_MonBrightnessUp, spawn, SHCMD("luz up")},
     {0, XF86XK_MonBrightnessDown, spawn, SHCMD("luz down")},
 
     TAGKEYS(XK_1, 0) TAGKEYS(XK_2, 1) TAGKEYS(XK_3, 2) TAGKEYS(XK_4, 3)
         TAGKEYS(XK_5, 4) TAGKEYS(XK_6, 5) TAGKEYS(XK_7, 6) TAGKEYS(XK_8, 7)
-            TAGKEYS(XK_9, 8)
+            TAGKEYS(XK_9, 8){MODKEY | ShiftMask, XK_q, quit, {0}},
 
     /* Layouts */
-    {MODKEYS, XK_t, setlayout, {.v = &layouts[0]}},
-    {MODKEYS, XK_f, setlayout, {.v = &layouts[1]}},
-    {MODKEYS, XK_m, setlayout, {.v = &layouts[2]}},
+    {MODKEY, XK_t, setlayout, {.v = &layouts[0]}},
+    {MODKEY, XK_f, setlayout, {.v = &layouts[1]}},
+    {MODKEY, XK_m, setlayout, {.v = &layouts[2]}},
     {MODKEYS, XK_space, togglefloating, {0}},
-    {MODKEY, XK_0, view, {.ui = ~0}},
-    {MODKEYS, XK_0, tag, {.ui = ~0}},
 };
