@@ -1649,12 +1649,11 @@ void tile(Monitor *m) {
 }
 
 void togglebar(const Arg *arg) {
-  for (Monitor *m = mons; m; m = m->next) {
-    m->showbar = !m->showbar;
-    updatebarpos(m);
-    XMoveResizeWindow(dpy, m->barwin, m->wx, m->by, m->ww, bh);
-    arrange(m);
-  }
+  selmon->showbar = !selmon->showbar;
+  updatebarpos(selmon);
+  XMoveResizeWindow(dpy, selmon->barwin, selmon->wx, selmon->by, selmon->ww,
+                    bh);
+  arrange(selmon);
 }
 
 void toggleborders(const Arg *arg) {
