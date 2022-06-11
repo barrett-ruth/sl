@@ -59,7 +59,7 @@ static Key keys[] = {
     {SCRIPT, XK_d, spawn, SHCMD("doc")},
     {SCRIPT, XK_r, spawn, SHCMD("rbt")},
     {SCRIPT, XK_s, spawn, SHCMD("sdn")},
-    {SCRIPT, XK_m, spawn, SHCMD("smon")},
+    {SCRIPT, XK_m, spawn, SHCMD("smon; sbg")},
 
     /* Window altering */
     {MODKEY, XK_a, focusstack, {.i = -1}},
