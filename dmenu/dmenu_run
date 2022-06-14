@@ -1,17 +1,2 @@
 #!/bin/sh
-
-dmenu_cache() {
-    cachedir="${XDG_CACHE_HOME:-"$HOME/.cache"}"
-    cache="$cachedir/dmenu_run"
-
-    [ ! -e "$cachedir" ] && mkdir -p "$cachedir"
-
-    IFS=:
-    if stest -dqr -n "$cache" $PATH; then
-            stest -flx $PATH | sort -u | tee "$cache"
-    else
-            cat "$cache"
-    fi
-}
-
-dmenu_cache | dmenu "$@" | "${SHELL:-"/bin/sh"}" &
+dmenu_path | dmenu "$@" | ${SHELL:-"/bin/sh"} &

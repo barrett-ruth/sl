@@ -11,6 +11,9 @@
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#ifdef XINERAMA
+#include <X11/extensions/Xinerama.h>
+#endif
 #include <X11/Xft/Xft.h>
 
 #include "drw.h"
@@ -56,6 +59,11 @@ static Clr *scheme[SchemeLast];
 static int (*fstrncmp)(const char *, const char *, size_t) = strncmp;
 static char *(*fstrstr)(const char *, const char *) = strstr;
 
+static unsigned int textw_clamp(const char *str, unsigned int n) {
+  unsigned int w = drw_fontset_getwidth_clamp(drw, str, n) + lrpad;
+  return MIN(w, n);
+}
+
 static void appenditem(struct item *item, struct item **list,
                        struct item **last) {
   if (*last)
@@ -77,10 +85,10 @@ static void calcoffsets(void) {
     n = mw - (promptw + inputw + TEXTW("<") + TEXTW(">"));
   /* calculate which items will begin the next page and previous page */
   for (i = 0, next = curr; next; next = next->right)
-    if ((i += (lines > 0) ? bh : MIN(TEXTW(next->text), n)) > n)
+    if ((i += (lines > 0) ? bh : textw_clamp(next->text, n)) > n)
       break;
   for (i = 0, prev = curr; prev && prev->left; prev = prev->left)
-    if ((i += (lines > 0) ? bh : MIN(TEXTW(prev->left->text), n)) > n)
+    if ((i += (lines > 0) ? bh : textw_clamp(prev->left->text, n)) > n)
       break;
 }
 
@@ -90,17 +98,28 @@ static void cleanup(void) {
   XUngrabKey(dpy, AnyKey, AnyModifier, root);
   for (i = 0; i < SchemeLast; i++)
     free(scheme[i]);
+  for (i = 0; items && items[i].text; ++i)
+    free(items[i].text);
+  free(items);
   drw_free(drw);
   XSync(dpy, False);
   XCloseDisplay(dpy);
 }
 
-static char *cistrstr(const char *s, const char *sub) {
-  size_t len;
+static char *cistrstr(const char *h, const char *n) {
+  size_t i;
 
-  for (len = strlen(sub); *s; s++)
-    if (!strncasecmp(s, sub, len))
-      return (char *)s;
+  if (!n[0])
+    return (char *)h;
+
+  for (; *h; ++h) {
+    for (i = 0;
+         n[i] && tolower((unsigned char)n[i]) == tolower((unsigned char)h[i]);
+         ++i)
+      ;
+    if (n[i] == '\0')
+      return (char *)h;
+  }
   return NULL;
 }
 
@@ -141,7 +160,7 @@ static void drawmenu(void) {
   if (lines > 0) {
     /* draw vertical list */
     for (item = curr; item != next; item = item->right)
-      drawitem(item, x - promptw, y += bh, mw - x + promptw);
+      drawitem(item, x - promptw, y += bh, mw + promptw);
   } else if (matches) {
     /* draw horizontal list */
     x += inputw;
@@ -152,7 +171,7 @@ static void drawmenu(void) {
     }
     x += w;
     for (item = curr; item != next; item = item->right)
-      x = drawitem(item, x, 0, MIN(TEXTW(item->text), mw - x - TEXTW(">")));
+      x = drawitem(item, x, 0, textw_clamp(item->text, mw - x - TEXTW(">")));
     if (next) {
       w = TEXTW(">");
       drw_setscheme(drw, scheme[SchemeNorm]);
@@ -206,7 +225,7 @@ static void match(void) {
   /* separate input text into tokens to be matched individually */
   for (s = strtok(buf, " "); s; tokv[tokc - 1] = s, s = strtok(NULL, " "))
     if (++tokc > tokn && !(tokv = realloc(tokv, ++tokn * sizeof *tokv)))
-      die("cannot realloc %u bytes:", tokn * sizeof *tokv);
+      die("cannot realloc %zu bytes:", tokn * sizeof *tokv);
   len = tokc ? strlen(tokv[0]) : 0;
 
   matches = lprefix = lsubstr = matchend = prefixend = substrend = NULL;
@@ -319,25 +338,29 @@ static void keypress(XKeyEvent *ev) {
     case XK_g:
       ksym = XK_Escape;
       break;
+    case XK_h:
+      ksym = XK_BackSpace;
+      break;
     case XK_i:
       ksym = XK_Tab;
       break;
-    case XK_p:
-      if (sel && sel->left && (sel = sel->left)->right == curr) {
-        curr = prev;
-        calcoffsets();
-      }
-      break;
-    case XK_n:
-      if (sel && sel->right && (sel = sel->right) == next) {
-        curr = next;
-        calcoffsets();
-      }
-      break;
+    case XK_j: /* fallthrough */
+    case XK_J: /* fallthrough */
     case XK_m: /* fallthrough */
     case XK_M:
       ksym = XK_Return;
       ev->state &= ~ControlMask;
+      break;
+    case XK_n:
+      ksym = XK_Down;
+      break;
+    case XK_p:
+      ksym = XK_Up;
+      break;
+
+    case XK_k: /* delete right */
+      text[cursor] = '\0';
+      match();
       break;
     case XK_u: /* delete left */
       insert(NULL, 0 - cursor);
@@ -348,6 +371,11 @@ static void keypress(XKeyEvent *ev) {
       while (cursor > 0 && !strchr(worddelimiters, text[nextrune(-1)]))
         insert(NULL, nextrune(-1) - cursor);
       break;
+    case XK_y: /* paste selection */
+    case XK_Y:
+      XConvertSelection(dpy, (ev->state & ShiftMask) ? clip : XA_PRIMARY, utf8,
+                        utf8, win, CurrentTime);
+      return;
     case XK_Left:
     case XK_KP_Left:
       movewordedge(-1);
@@ -379,18 +407,18 @@ static void keypress(XKeyEvent *ev) {
     case XK_G:
       ksym = XK_End;
       break;
-    case XK_l:
-    case XK_j:
-      ksym = XK_Down;
-      break;
     case XK_h:
+      ksym = XK_Up;
+      break;
+    case XK_j:
+      ksym = XK_Next;
+      break;
     case XK_k:
+      ksym = XK_Prior;
+      break;
+    case XK_l:
       ksym = XK_Down;
       break;
-    case XK_p: /* paste selection */
-    case XK_P:
-      XConvertSelection(dpy, clip, utf8, utf8, win, CurrentTime);
-      return;
     default:
       return;
     }
@@ -399,7 +427,7 @@ static void keypress(XKeyEvent *ev) {
   switch (ksym) {
   default:
   insert:
-    if (!iscntrl(*buf))
+    if (!iscntrl((unsigned char)*buf))
       insert(buf, len);
     break;
   case XK_Delete:
@@ -530,28 +558,21 @@ static void paste(void) {
 
 static void readstdin(void) {
   char buf[sizeof text], *p;
-  size_t i, imax = 0, size = 0;
-  unsigned int tmpmax = 0;
+  size_t i, size = 0;
 
   /* read each line from stdin and add it to the item list */
   for (i = 0; fgets(buf, sizeof buf, stdin); i++) {
     if (i + 1 >= size / sizeof *items)
       if (!(items = realloc(items, (size += BUFSIZ))))
-        die("cannot realloc %u bytes:", size);
+        die("cannot realloc %zu bytes:", size);
     if ((p = strchr(buf, '\n')))
       *p = '\0';
     if (!(items[i].text = strdup(buf)))
-      die("cannot strdup %u bytes:", strlen(buf) + 1);
+      die("cannot strdup %zu bytes:", strlen(buf) + 1);
     items[i].out = 0;
-    drw_font_getexts(drw->fonts, buf, strlen(buf), &tmpmax, NULL);
-    if (tmpmax > inputw) {
-      inputw = tmpmax;
-      imax = i;
-    }
   }
   if (items)
     items[i].text = NULL;
-  inputw = items ? TEXTW(items[imax].text) : 0;
   lines = MIN(lines, i);
 }
 
@@ -599,6 +620,11 @@ static void setup(void) {
   Window w, dw, *dws;
   XWindowAttributes wa;
   XClassHint ch = {"dmenu", "dmenu"};
+#ifdef XINERAMA
+  XineramaScreenInfo *info;
+  Window pw;
+  int a, di, n, area = 0;
+#endif
   /* init appearance */
   for (j = 0; j < SchemeLast; j++)
     scheme[j] = drw_scm_create(drw, colors[j], 2);
@@ -610,6 +636,40 @@ static void setup(void) {
   bh = drw->fonts->h + 2;
   lines = MAX(lines, 0);
   mh = (lines + 1) * bh;
+#ifdef XINERAMA
+  i = 0;
+  if (parentwin == root && (info = XineramaQueryScreens(dpy, &n))) {
+    XGetInputFocus(dpy, &w, &di);
+    if (mon >= 0 && mon < n)
+      i = mon;
+    else if (w != root && w != PointerRoot && w != None) {
+      /* find top-level window containing current input focus */
+      do {
+        if (XQueryTree(dpy, (pw = w), &dw, &w, &dws, &du) && dws)
+          XFree(dws);
+      } while (w != root && w != pw);
+      /* find xinerama screen with which the window intersects most */
+      if (XGetWindowAttributes(dpy, pw, &wa))
+        for (j = 0; j < n; j++)
+          if ((a = INTERSECT(wa.x, wa.y, wa.width, wa.height, info[j])) >
+              area) {
+            area = a;
+            i = j;
+          }
+    }
+    /* no focused window is on screen, so use pointer location instead */
+    if (mon < 0 && !area &&
+        XQueryPointer(dpy, root, &dw, &dw, &x, &y, &di, &di, &du))
+      for (i = 0; i < n; i++)
+        if (INTERSECT(x, y, 1, 1, info[i]) != 0)
+          break;
+
+    x = info[i].x_org;
+    y = info[i].y_org + (topbar ? 0 : info[i].height - mh);
+    mw = info[i].width;
+    XFree(info);
+  } else
+#endif
   {
     if (!XGetWindowAttributes(dpy, parentwin, &wa))
       die("could not get embedding window attributes: 0x%lx", parentwin);
@@ -618,7 +678,7 @@ static void setup(void) {
     mw = wa.width;
   }
   promptw = (prompt && *prompt) ? TEXTW(prompt) - lrpad / 4 : 0;
-  inputw = MIN(inputw, mw / 3);
+  inputw = mw / 3; /* input width: ~33% of monitor width */
   match();
 
   /* create menu window */
