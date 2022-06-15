@@ -5,8 +5,8 @@
  *
  * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
  */
-static char *font = "monospace:pixelsize=51:antialias=true";
-static int borderpx = 5;
+static char *font = "monospace:pixelsize=40:antialias=true";
+static int borderpx = 0;
 
 static char *shell = "/bin/sh";
 char *utmp = NULL;
