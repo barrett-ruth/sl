@@ -34,13 +34,14 @@ static const Layout layouts[] = {
 /* key definitions */
 #define MODKEY Mod1Mask
 #define MODKEYS MODKEY | ShiftMask
+#define MODKEYC MODKEY | ControlMask
 #define SCRIPT Mod3Mask
 
 #define TAGKEYS(KEY, TAG)                                                      \
   {MODKEY, KEY, view, {.ui = 1 << TAG}},                                       \
       {MODKEY | ControlMask, KEY, tagview, {.ui = 1 << TAG}},                  \
-      {MODKEY | ShiftMask, KEY, tag, {.ui = 1 << TAG}},                        \
-      {MODKEY | ControlMask | ShiftMask, KEY, toggletag, {.ui = 1 << TAG}},
+      {MODKEYS, KEY, tag, {.ui = 1 << TAG}},                                   \
+      {MODKEYS | ControlMask, KEY, toggletag, {.ui = 1 << TAG}},
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd)                                                             \
@@ -79,6 +80,8 @@ static Key keys[] = {
     {MODKEY, XK_period, focusmon, {.i = +1}},
     {MODKEYS, XK_comma, tagmon, {.i = -1}},
     {MODKEYS, XK_period, tagmon, {.i = +1}},
+    {MODKEYC, XK_comma, tagfocusmon, {.i = -1}},
+    {MODKEYC, XK_period, tagfocusmon, {.i = +1}},
 
     /* Quitting */
     {MODKEY, XK_q, killclient, {0}},

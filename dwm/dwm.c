@@ -237,6 +237,7 @@ static void spawn(const Arg *arg);
 static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void tagview(const Arg *arg);
+static void tagfocusmon(const Arg *arg);
 static void tile(Monitor *);
 static void togglebar(const Arg *arg);
 static void toggleborders(const Arg *arg);
@@ -1619,6 +1620,11 @@ void tagview(const Arg *arg) {
   view(arg);
 }
 
+void tagfocusmon(const Arg *arg) {
+  tagmon(arg);
+  focusmon(arg);
+}
+
 void tile(Monitor *m) {
   unsigned int i, n, h, mw, my, ty;
   Client *c;
@@ -2060,10 +2066,6 @@ int main(int argc, char *argv[]) {
     die("dwm: cannot open display");
   checkotherwm();
   setup();
-#ifdef __OpenBSD__
-  if (pledge("stdio rpath proc exec", NULL) == -1)
-    die("pledge");
-#endif /* __OpenBSD__ */
   scan();
   run();
   cleanup();
