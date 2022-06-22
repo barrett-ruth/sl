@@ -93,18 +93,18 @@ static const char *colorname[] = {
     [2] = "#78997a", /* green:a9b665 */
     [3] = "#ebc06d", /* yellow:d8a657 */
     [4] = "#697893", /* blue:7daea3 */
-    [5] = "#ce9bcb", /* magenta:d3869b */
+    [5] = "#b380b0", /* magenta:d3869b */
     [6] = "#86a3a3", /* cyan:89b482 */
-    [7] = "#ece1d7", /* white:d4be98 */
+    [7] = "#c1a78e", /* white:d4be98 */
 
     /* 8 bright colors */
     [8] = "#2a2520",  /* bg: 1d2021 */
-    [9] = "#b65c60",  /* red:ea6962 */
-    [10] = "#78997a", /* green:a9b665 */
+    [9] = "#f17c64",  /* red:ea6962 */
+    [10] = "#99d59d", /* green:a9b665 */
     [11] = "#ebc06d", /* yellow:d8a657 */
-    [12] = "#697893", /* blue:7daea3 */
+    [12] = "#9aacce", /* blue:7daea3 */
     [13] = "#ce9bcb", /* magenta:d3869b */
-    [14] = "#86a3a3", /* cyan:89b482 */
+    [14] = "#88b3b2", /* cyan:89b482 */
     [15] = "#ece1d7", /* white:d4be98 */
 };
 
