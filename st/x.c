@@ -1559,8 +1559,8 @@ void xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len,
   }
 
   if (base.mode & ATTR_STRUCK) {
-    XftDrawRect(xw.draw, fg, winx, winy + win.cyo + 2 * dc.font.ascent * chscale / 3,
-                width, 1);
+    XftDrawRect(xw.draw, fg, winx,
+                winy + win.cyo + 2 * dc.font.ascent * chscale / 3, width, 1);
   }
 
   /* Reset clip to none. */
