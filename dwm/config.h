@@ -52,11 +52,13 @@ static const Layout layouts[] = {
 static Key keys[] = {
     /* modifier                     key        function        argument */
     {MODKEY, XK_b, togglebar, {0}},
+    {MODKEY, XK_c, spawn, SHCMD("chromium")},
     {MODKEY, XK_w, spawn, SHCMD("qutebrowser")},
     {MODKEY, XK_space, spawn, SHCMD("dmenu_run")},
     {MODKEY, XK_Return, spawn, SHCMD("st")},
 
     /* Scripts */
+    {SCRIPT, XK_C, spawn, SHCMD("clipmenu")},
     {SCRIPT, XK_d, spawn, SHCMD("doc")},
     {SCRIPT, XK_r, spawn, SHCMD("rbt")},
     {SCRIPT, XK_s, spawn, SHCMD("sdn")},
