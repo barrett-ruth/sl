@@ -22,7 +22,7 @@ index 470ac86..38240da 100644
  $(OBJ): config.h config.mk
  
 diff --git a/config.mk b/config.mk
-index c070a4a..3d236f0 100644
+index beafc35..3df5c83 100644
 --- a/config.mk
 +++ b/config.mk
 @@ -15,10 +15,12 @@ PKG_CONFIG = pkg-config
@@ -42,21 +42,18 @@ index c070a4a..3d236f0 100644
  STCPPFLAGS = -DVERSION=\"$(VERSION)\" -D_XOPEN_SOURCE=600
 diff --git a/hb.c b/hb.c
 new file mode 100644
-index 0000000..6389e95
+index 0000000..7df2828
 --- /dev/null
 +++ b/hb.c
-@@ -0,0 +1,145 @@
+@@ -0,0 +1,136 @@
 +#include <stdlib.h>
 +#include <stdio.h>
 +#include <math.h>
 +#include <X11/Xft/Xft.h>
-+#include <X11/cursorfont.h>
 +#include <hb.h>
 +#include <hb-ft.h>
 +
 +#include "st.h"
-+
-+#define FEATURE(c1,c2,c3,c4) { .tag = HB_TAG(c1,c2,c3,c4), .value = 1, .start = HB_FEATURE_GLOBAL_START, .end = HB_FEATURE_GLOBAL_END }
 +
 +void hbtransformsegment(XftFont *xfont, const Glyph *string, hb_codepoint_t *codepoints, int start, int length);
 +hb_font_t *hbfindfont(XftFont *match);
@@ -68,12 +65,6 @@ index 0000000..6389e95
 +
 +static int hbfontslen = 0;
 +static HbFontMatch *hbfontcache = NULL;
-+
-+/* 
-+ * Replace 0 with a list of font features, wrapped in FEATURE macro, e.g. 
-+ * FEATURE('c', 'a', 'l', 't'), FEATURE('d', 'l', 'i', 'g')
-+ */
-+hb_feature_t features[] = { 0 };
 +
 +void
 +hbunloadfonts()
@@ -116,7 +107,7 @@ index 0000000..6389e95
 +hbtransform(XftGlyphFontSpec *specs, const Glyph *glyphs, size_t len, int x, int y)
 +{
 +	int start = 0, length = 1, gstart = 0;
-+	hb_codepoint_t *codepoints = calloc((unsigned int)len, sizeof(hb_codepoint_t));
++	hb_codepoint_t *codepoints = calloc(len, sizeof(hb_codepoint_t));
 +
 +	for (int idx = 1, specidx = 1; idx < len; idx++) {
 +		if (glyphs[idx].mode & ATTR_WDUMMY) {
@@ -177,7 +168,7 @@ index 0000000..6389e95
 +	}
 +
 +	/* Shape the segment. */
-+	hb_shape(font, buffer, features, sizeof(features));
++	hb_shape(font, buffer, NULL, 0);
 +
 +	/* Get new glyph info. */
 +	hb_glyph_info_t *info = hb_buffer_get_glyph_infos(buffer, NULL);
@@ -193,21 +184,22 @@ index 0000000..6389e95
 +}
 diff --git a/hb.h b/hb.h
 new file mode 100644
-index 0000000..07888df
+index 0000000..b3e02d0
 --- /dev/null
 +++ b/hb.h
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +#include <X11/Xft/Xft.h>
 +#include <hb.h>
 +#include <hb-ft.h>
 +
 +void hbunloadfonts();
 +void hbtransform(XftGlyphFontSpec *, const Glyph *, size_t, int, int);
++
 diff --git a/st.c b/st.c
-index 76b7e0d..e60bf58 100644
+index 2bf133f..747f7b4 100644
 --- a/st.c
 +++ b/st.c
-@@ -2581,7 +2581,8 @@ draw(void)
+@@ -2599,7 +2599,8 @@ draw(void)
  
  	drawregion(0, 0, term.col, term.row);
  	xdrawcursor(cx, term.c.y, term.line[term.c.y][cx],
@@ -218,7 +210,7 @@ index 76b7e0d..e60bf58 100644
  	term.ocy = term.c.y;
  	xfinishdraw();
 diff --git a/st.h b/st.h
-index 3d351b6..06b115d 100644
+index d978458..c9b279b 100644
 --- a/st.h
 +++ b/st.h
 @@ -11,7 +11,8 @@
@@ -253,7 +245,7 @@ index a6ef1b9..bc0d180 100644
  void xfinishdraw(void);
  void xloadcols(void);
 diff --git a/x.c b/x.c
-index 210f184..f6d67ef 100644
+index e5f1737..3334a83 100644
 --- a/x.c
 +++ b/x.c
 @@ -19,6 +19,7 @@ char *argv0;
