@@ -298,6 +298,7 @@ static Monitor *mons, *selmon;
 static Window root, wmcheckwin;
 
 /* configuration, allows nested code to access above variables */
+
 #include "config.h"
 
 /* compile-time check if all tags fit into an unsigned int bit array. */
@@ -619,7 +620,8 @@ Monitor *createmon(void) {
   m->nmaster = nmaster;
   m->showbar = showbar;
   m->topbar = topbar;
-  m->borderpx = borderpx;
+  // Initially set borderpx to 0 regardless
+  m->borderpx = 0;
   m->lt[0] = &layouts[0];
   m->lt[1] = &layouts[1 % LENGTH(layouts)];
   strncpy(m->ltsymbol, layouts[0].symbol, sizeof m->ltsymbol);
