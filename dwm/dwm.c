@@ -622,7 +622,7 @@ Monitor *createmon(void) {
   m->showbar = showbar;
   m->topbar = topbar;
   // Initially set borderpx to 0 regardless
-  m->borderpx = borderpx;
+  m->borderpx = 0;
   m->lt[0] = &layouts[0];
   m->lt[1] = &layouts[1 % LENGTH(layouts)];
   strncpy(m->ltsymbol, layouts[0].symbol, sizeof m->ltsymbol);
