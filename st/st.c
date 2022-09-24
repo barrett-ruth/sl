@@ -20,7 +20,13 @@
 #include "st.h"
 #include "win.h"
 
+#if defined(__linux)
 #include <pty.h>
+#elif defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
+#include <util.h>
+#elif defined(__FreeBSD__) || defined(__DragonFly__)
+#include <libutil.h>
+#endif
 
 /* Arbitrary sizes */
 #define UTF_INVALID 0xFFFD
@@ -114,8 +120,8 @@ typedef struct {
   Line *alt;           /* alternate screen */
   Line hist[HISTSIZE]; /* history buffer */
   int histi;           /* history index */
-  int scr;             /* scroll back */
   int *dirty;          /* dirtyness of lines */
+  int scr;             /* scroll back */
   TCursor c;           /* cursor */
   int ocx;             /* old cursor col */
   int ocy;             /* old cursor row */
@@ -163,6 +169,7 @@ static void csihandle(void);
 static void readcolonargs(char **, int, int[][CAR_PER_ARG]);
 static void csiparse(void);
 static void csireset(void);
+static void osc_color_response(int, int, int);
 static int eschandle(uchar);
 static void strdump(void);
 static void strhandle(void);
@@ -744,9 +751,17 @@ int ttynew(const char *line, char *cmd, const char *out, char **args) {
       die("ioctl TIOCSCTTY failed: %s\n", strerror(errno));
     if (s > 2)
       close(s);
+#ifdef __OpenBSD__
+    if (pledge("stdio getpw proc exec", NULL) == -1)
+      die("pledge\n");
+#endif
     execsh(cmd, args);
     break;
   default:
+#ifdef __OpenBSD__
+    if (pledge("stdio rpath tty proc", NULL) == -1)
+      die("pledge\n");
+#endif
     close(s);
     cmdfd = m;
     signal(SIGCHLD, sigchld);
@@ -875,7 +890,7 @@ void ttyresize(int tw, int th) {
     fprintf(stderr, "Couldn't set window size: %s\n", strerror(errno));
 }
 
-void ttyhangup() {
+void ttyhangup(void) {
   /* Send SIGHUP to shell */
   kill(pid, SIGHUP);
 }
@@ -960,8 +975,6 @@ void tnew(int col, int row) {
   tresize(col, row);
   treset();
 }
-
-int tisaltscr(void) { return IS_SET(MODE_ALTSCREEN); }
 
 void tswapscreen(void) {
   Line *tmp = term.line;
@@ -1785,41 +1798,37 @@ void csidump(void) {
 
 void csireset(void) { memset(&csiescseq, 0, sizeof(csiescseq)); }
 
-void osc4_color_response(int num) {
+void osc_color_response(int num, int index, int is_osc4) {
   int n;
   char buf[32];
   unsigned char r, g, b;
 
-  if (xgetcolor(num, &r, &g, &b)) {
-    fprintf(stderr, "erresc: failed to fetch osc4 color %d\n", num);
+  if (xgetcolor(is_osc4 ? num : index, &r, &g, &b)) {
+    fprintf(stderr, "erresc: failed to fetch %s color %d\n",
+            is_osc4 ? "osc4" : "osc", is_osc4 ? num : index);
     return;
   }
 
-  n = snprintf(buf, sizeof buf, "\033]4;%d;rgb:%02x%02x/%02x%02x/%02x%02x\007",
-               num, r, r, g, g, b, b);
-
-  ttywrite(buf, n, 1);
-}
-
-void osc_color_response(int index, int num) {
-  int n;
-  char buf[32];
-  unsigned char r, g, b;
-
-  if (xgetcolor(index, &r, &g, &b)) {
-    fprintf(stderr, "erresc: failed to fetch osc color %d\n", index);
-    return;
+  n = snprintf(buf, sizeof buf, "\033]%s%d;rgb:%02x%02x/%02x%02x/%02x%02x\007",
+               is_osc4 ? "4;" : "", num, r, r, g, g, b, b);
+  if (n < 0 || n >= sizeof(buf)) {
+    fprintf(stderr, "error: %s while printing %s response\n",
+            n < 0 ? "snprintf failed" : "truncation occurred",
+            is_osc4 ? "osc4" : "osc");
+  } else {
+    ttywrite(buf, n, 1);
   }
-
-  n = snprintf(buf, sizeof buf, "\033]%d;rgb:%02x%02x/%02x%02x/%02x%02x\007",
-               num, r, r, g, g, b, b);
-
-  ttywrite(buf, n, 1);
 }
 
 void strhandle(void) {
   char *p = NULL, *dec;
   int j, narg, par;
+  const struct {
+    int idx;
+    char *str;
+  } osc_table[] = {{defaultfg, "foreground"},
+                   {defaultbg, "background"},
+                   {defaultcs, "cursor"}};
 
   term.esc &= ~(ESC_STR_END | ESC_STR);
   strparse();
@@ -1854,43 +1863,21 @@ void strhandle(void) {
       }
       return;
     case 10:
-      if (narg < 2)
-        break;
-
-      p = strescseq.args[1];
-
-      if (!strcmp(p, "?"))
-        osc_color_response(defaultfg, 10);
-      else if (xsetcolorname(defaultfg, p))
-        fprintf(stderr, "erresc: invalid foreground color: %s\n", p);
-      else
-        tfulldirt();
-      return;
     case 11:
-      if (narg < 2)
-        break;
-
-      p = strescseq.args[1];
-
-      if (!strcmp(p, "?"))
-        osc_color_response(defaultbg, 11);
-      else if (xsetcolorname(defaultbg, p))
-        fprintf(stderr, "erresc: invalid background color: %s\n", p);
-      else
-        tfulldirt();
-      return;
     case 12:
       if (narg < 2)
         break;
-
       p = strescseq.args[1];
+      if ((j = par - 10) < 0 || j >= LEN(osc_table))
+        break; /* shouldn't be possible */
 
-      if (!strcmp(p, "?"))
-        osc_color_response(defaultcs, 12);
-      else if (xsetcolorname(defaultcs, p))
-        fprintf(stderr, "erresc: invalid cursor color: %s\n", p);
-      else
+      if (!strcmp(p, "?")) {
+        osc_color_response(par, osc_table[j].idx, 0);
+      } else if (xsetcolorname(osc_table[j].idx, p)) {
+        fprintf(stderr, "erresc: invalid %s color: %s\n", osc_table[j].str, p);
+      } else {
         tfulldirt();
+      }
       return;
     case 4: /* color set */
       if (narg < 3)
@@ -1900,9 +1887,9 @@ void strhandle(void) {
     case 104: /* color reset */
       j = (narg > 1) ? atoi(strescseq.args[1]) : -1;
 
-      if (p && !strcmp(p, "?"))
-        osc4_color_response(j);
-      else if (xsetcolorname(j, p)) {
+      if (p && !strcmp(p, "?")) {
+        osc_color_response(j, 0, 1);
+      } else if (xsetcolorname(j, p)) {
         if (par == 104 && narg <= 1)
           return; /* color reset without parameter */
         fprintf(stderr, "erresc: invalid color j=%d, p=%s\n", j,
@@ -2045,6 +2032,8 @@ void tprinter(char *s, size_t len) {
     iofd = -1;
   }
 }
+
+void externalpipe(const Arg *);
 
 void toggleprinter(const Arg *arg) { term.mode ^= MODE_PRINT; }
 

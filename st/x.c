@@ -35,7 +35,6 @@ typedef struct {
   void (*func)(const Arg *);
   const Arg arg;
   uint release;
-  int altscrn; /* 0: don't care, -1: not alt screen, 1: alt screen */
 } MouseShortcut;
 
 typedef struct {
@@ -47,7 +46,6 @@ typedef struct {
   signed char appcursor; /* application cursor */
 } Key;
 
-/* Undercurl slope types */
 enum undercurl_slope_type {
   UNDERCURL_SLOPE_ASCENDING = 0,
   UNDERCURL_SLOPE_TOP_CAP = 1,
@@ -428,7 +426,6 @@ int mouseaction(XEvent *e, uint release) {
 
   for (ms = mshortcuts; ms < mshortcuts + LEN(mshortcuts); ms++) {
     if (ms->release == release && ms->button == e->xbutton.button &&
-        (!ms->altscrn || (ms->altscrn == (tisaltscr() ? 1 : -1))) &&
         (match(ms->mod, state) || /* exact or forced */
          match(ms->mod, state & ~forcemousemod))) {
       ms->func(&(ms->arg));
@@ -1260,14 +1257,13 @@ int xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len,
     numspecs++;
   }
 
-  /* Harfbuzz transformation for ligatures */
+  /* Harfbuzz transformation for ligatures. */
   hbtransform(specs, glyphs, len, x, y);
 
   return numspecs;
 }
 
 static int isSlopeRising(int x, int iPoint, int waveWidth) {
-  // Find absolute `x` of point
   x += iPoint * (waveWidth / 2);
 
   // Find index of absolute wave
@@ -1415,6 +1411,7 @@ void xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len,
 
   /* Render underline and strikethrough. */
   if (base.mode & ATTR_UNDERLINE) {
+
     // Underline Color
     const int widthThreshold = 28; // +1 width every widthThreshold px of font
     int wlw = (win.ch / widthThreshold) + 1; // Wave Line Width

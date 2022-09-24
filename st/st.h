@@ -37,7 +37,7 @@ enum glyph_attribute {
   ATTR_WDUMMY = 1 << 10,
   ATTR_LIGA = 1 << 11,
   ATTR_BOLD_FAINT = ATTR_BOLD | ATTR_FAINT,
-  ATTR_DIRTYUNDERLINE = 1 << 15,
+  ATTR_DIRTYUNDERLINE = 1 << 15
 };
 
 enum selection_mode { SEL_IDLE = 0, SEL_EMPTY = 1, SEL_READY = 2 };
@@ -77,16 +77,15 @@ void die(const char *, ...);
 void redraw(void);
 void draw(void);
 
-void externalpipe(const Arg *);
 void kscrolldown(const Arg *);
 void kscrollup(const Arg *);
+void externalpipe(const Arg *);
 void printscreen(const Arg *);
 void printsel(const Arg *);
 void sendbreak(const Arg *);
 void toggleprinter(const Arg *);
 
 int tattrset(int);
-int tisaltscr(void);
 void tnew(int, int);
 void tresize(int, int);
 void tsetdirtattr(int);
@@ -110,8 +109,6 @@ size_t utf8encode(Rune, char *);
 void *xmalloc(size_t);
 void *xrealloc(void *, size_t);
 char *xstrdup(const char *);
-
-int xgetcolor(int x, unsigned char *r, unsigned char *g, unsigned char *b);
 
 /* config.h globals */
 extern char *utmp;
