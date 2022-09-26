@@ -5,7 +5,7 @@
  *
  * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
  */
-static char *font = "monospace:pixelsize=40:antialias=true";
+static char *font = "monospace:pixelsize=40:antialias=true:autohint=true";
 static int borderpx = 0;
 
 /*
@@ -162,8 +162,8 @@ static unsigned int defaultattr = 11;
 static uint forcemousemod = ShiftMask;
 
 /*
- * Internal mouse shortcuts.
- * Beware that overloading Button1 will disable the selection.
+ * internal mouse shortcuts.
+ * beware that overloading button1 will disable the selection.
  */
 static MouseShortcut mshortcuts[] = {
     /* mask                 button   function        argument       release */

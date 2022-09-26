@@ -20,13 +20,7 @@
 #include "st.h"
 #include "win.h"
 
-#if defined(__linux)
 #include <pty.h>
-#elif defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
-#include <util.h>
-#elif defined(__FreeBSD__) || defined(__DragonFly__)
-#include <libutil.h>
-#endif
 
 /* Arbitrary sizes */
 #define UTF_INVALID 0xFFFD
@@ -120,8 +114,8 @@ typedef struct {
   Line *alt;           /* alternate screen */
   Line hist[HISTSIZE]; /* history buffer */
   int histi;           /* history index */
-  int *dirty;          /* dirtyness of lines */
   int scr;             /* scroll back */
+  int *dirty;          /* dirtyness of lines */
   TCursor c;           /* cursor */
   int ocx;             /* old cursor col */
   int ocy;             /* old cursor row */
@@ -796,7 +790,6 @@ size_t ttyread(void) {
 
 void ttywrite(const char *s, size_t n, int may_echo) {
   const char *next;
-
   Arg arg = (Arg){.i = term.scr};
 
   kscrolldown(&arg);
@@ -1065,8 +1058,7 @@ void tscrollup(int orig, int n, int copyhist) {
     term.line[i + n] = temp;
   }
 
-  if (term.scr == 0)
-    selscroll(orig, -n);
+  selscroll(orig, -n);
 }
 
 void selscroll(int orig, int n) {
@@ -2033,8 +2025,6 @@ void tprinter(char *s, size_t len) {
   }
 }
 
-void externalpipe(const Arg *);
-
 void toggleprinter(const Arg *arg) { term.mode ^= MODE_PRINT; }
 
 void printscreen(const Arg *arg) { tdump(); }
@@ -2601,7 +2591,7 @@ void draw(void) {
   drawregion(0, 0, term.col, term.row);
   if (term.scr == 0)
     xdrawcursor(cx, term.c.y, term.line[term.c.y][cx], term.ocx, term.ocy,
-                term.line[term.ocy][term.ocx], term.line[term.ocy], term.col);
+                term.line[term.ocy][term.ocx]);
   term.ocx = cx;
   term.ocy = term.c.y;
   xfinishdraw();

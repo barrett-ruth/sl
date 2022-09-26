@@ -344,8 +344,8 @@ index 3d351b6..f44e1d3 100644
  void redraw(void);
  void draw(void);
  
-+void kscrolldown(const Arg *);
-+void kscrollup(const Arg *);
++void kscrolldown(const arg *);
++void kscrollup(const arg *);
  void printscreen(const Arg *);
  void printsel(const Arg *);
  void sendbreak(const Arg *);
