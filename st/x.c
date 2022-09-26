@@ -152,7 +152,8 @@ typedef struct {
 static inline ushort sixd_to_16bit(int);
 static int xmakeglyphfontspecs(XftGlyphFontSpec *, const Glyph *, int, int,
                                int);
-static void xdrawglyphfontspecs(const XftGlyphFontSpec *, Glyph, int, int, int);
+static void xdrawglyphfontspecs(const XftGlyphFontSpec *, Glyph, int, int, int,
+                                int);
 static void xdrawglyph(Glyph, int, int);
 static void xclear(int, int, int, int);
 static int xgeommasktogravity(int);
@@ -1294,7 +1295,7 @@ static int getSlope(int x, int iPoint, int waveWidth) {
 }
 
 void xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len,
-                         int x, int y) {
+                         int x, int y, int dmode) {
   int charlen = len * ((base.mode & ATTR_WIDE) ? 2 : 1);
   int winx = borderpx + x * win.cw, winy = borderpx + y * win.ch,
       width = charlen * win.cw;
@@ -1382,22 +1383,26 @@ void xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len,
   if (base.mode & ATTR_INVISIBLE)
     fg = bg;
 
-  /* Intelligent cleaning up of the borders. */
-  if (x == 0) {
-    xclear(0, (y == 0) ? 0 : winy, borderpx,
-           winy + win.ch + ((winy + win.ch >= borderpx + win.th) ? win.h : 0));
-  }
-  if (winx + width >= borderpx + win.tw) {
-    xclear(winx + width, (y == 0) ? 0 : winy, win.w,
-           ((winy + win.ch >= borderpx + win.th) ? win.h : (winy + win.ch)));
-  }
-  if (y == 0)
-    xclear(winx, 0, winx + width, borderpx);
-  if (winy + win.ch >= borderpx + win.th)
-    xclear(winx, winy + win.ch, winx + width, win.h);
+  if (dmode & DRAW_BG) {
 
-  /* Clean up the region we want to draw to. */
-  XftDrawRect(xw.draw, bg, winx, winy, width, win.ch);
+    /* Intelligent cleaning up of the borders. */
+    if (x == 0) {
+      xclear(0, (y == 0) ? 0 : winy, borderpx,
+             winy + win.ch +
+                 ((winy + win.ch >= borderpx + win.th) ? win.h : 0));
+    }
+    if (winx + width >= borderpx + win.tw) {
+      xclear(winx + width, (y == 0) ? 0 : winy, win.w,
+             ((winy + win.ch >= borderpx + win.th) ? win.h : (winy + win.ch)));
+    }
+    if (y == 0)
+      xclear(winx, 0, winx + width, borderpx);
+    if (winy + win.ch >= borderpx + win.th)
+      xclear(winx, winy + win.ch, winx + width, win.h);
+
+    /* Clean up the region we want to draw to. */
+    XftDrawRect(xw.draw, bg, winx, winy, width, win.ch);
+  }
 
   /* Set the clip region because Xft is sometimes dirty. */
   r.x = 0;
@@ -1406,153 +1411,156 @@ void xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len,
   r.width = width;
   XftDrawSetClipRectangles(xw.draw, winx, winy, &r, 1);
 
-  /* Render the glyphs. */
-  XftDrawGlyphFontSpec(xw.draw, fg, specs, len);
+  if (dmode & DRAW_FG) {
+    /* Render the glyphs. */
+    XftDrawGlyphFontSpec(xw.draw, fg, specs, len);
 
-  /* Render underline and strikethrough. */
-  if (base.mode & ATTR_UNDERLINE) {
+    /* Render underline and strikethrough. */
+    if (base.mode & ATTR_UNDERLINE) {
 
-    // Underline Color
-    const int widthThreshold = 28; // +1 width every widthThreshold px of font
-    int wlw = (win.ch / widthThreshold) + 1; // Wave Line Width
-    int linecolor;
-    if ((base.ucolor[0] >= 0) &&
-        !(base.mode & ATTR_BLINK && win.mode & MODE_BLINK) &&
-        !(base.mode & ATTR_INVISIBLE)) {
-      // Special color for underline
-      // Index
-      if (base.ucolor[1] < 0) {
-        linecolor = dc.col[base.ucolor[0]].pixel;
+      // Underline Color
+      const int widthThreshold = 28; // +1 width every widthThreshold px of font
+      int wlw = (win.ch / widthThreshold) + 1; // Wave Line Width
+      int linecolor;
+      if ((base.ucolor[0] >= 0) &&
+          !(base.mode & ATTR_BLINK && win.mode & MODE_BLINK) &&
+          !(base.mode & ATTR_INVISIBLE)) {
+        // Special color for underline
+        // Index
+        if (base.ucolor[1] < 0) {
+          linecolor = dc.col[base.ucolor[0]].pixel;
+        }
+        // RGB
+        else {
+          XColor lcolor;
+          lcolor.red = base.ucolor[0] * 257;
+          lcolor.green = base.ucolor[1] * 257;
+          lcolor.blue = base.ucolor[2] * 257;
+          lcolor.flags = DoRed | DoGreen | DoBlue;
+          XAllocColor(xw.dpy, xw.cmap, &lcolor);
+          linecolor = lcolor.pixel;
+        }
+      } else {
+        // Foreground color for underline
+        linecolor = fg->pixel;
       }
-      // RGB
-      else {
-        XColor lcolor;
-        lcolor.red = base.ucolor[0] * 257;
-        lcolor.green = base.ucolor[1] * 257;
-        lcolor.blue = base.ucolor[2] * 257;
-        lcolor.flags = DoRed | DoGreen | DoBlue;
-        XAllocColor(xw.dpy, xw.cmap, &lcolor);
-        linecolor = lcolor.pixel;
-      }
-    } else {
-      // Foreground color for underline
-      linecolor = fg->pixel;
-    }
 
-    XGCValues ugcv = {.foreground = linecolor,
-                      .line_width = wlw,
-                      .line_style = LineSolid,
-                      .cap_style = CapNotLast};
+      XGCValues ugcv = {.foreground = linecolor,
+                        .line_width = wlw,
+                        .line_style = LineSolid,
+                        .cap_style = CapNotLast};
 
-    GC ugc =
-        XCreateGC(xw.dpy, XftDrawDrawable(xw.draw),
-                  GCForeground | GCLineWidth | GCLineStyle | GCCapStyle, &ugcv);
+      GC ugc = XCreateGC(xw.dpy, XftDrawDrawable(xw.draw),
+                         GCForeground | GCLineWidth | GCLineStyle | GCCapStyle,
+                         &ugcv);
 
-    // Underline Style
-    if (base.ustyle != 3) {
-      // XftDrawRect(xw.draw, fg, winx, winy + dc.font.ascent + 1, width, 1);
-      XFillRectangle(xw.dpy, XftDrawDrawable(xw.draw), ugc, winx,
-                     winy + win.cyo + dc.font.ascent + 1, width, wlw);
-    } else if (base.ustyle == 3) {
-      int ww = win.cw;                        // width;
-      int wh = dc.font.descent - wlw / 2 - 1; // r.height/7;
-      int wx = winx;
-      int wy = winy + win.ch - dc.font.descent;
+      // Underline Style
+      if (base.ustyle != 3) {
+        // XftDrawRect(xw.draw, fg, winx, winy + dc.font.ascent + 1, width, 1);
+        XFillRectangle(xw.dpy, XftDrawDrawable(xw.draw), ugc, winx,
+                       winy + win.cyo + dc.font.ascent + 1, width, wlw);
+      } else if (base.ustyle == 3) {
+        int ww = win.cw;                        // width;
+        int wh = dc.font.descent - wlw / 2 - 1; // r.height/7;
+        int wx = winx;
+        int wy = winy + win.ch - dc.font.descent;
 
-      // Make the underline corridor larger
-      /*
-      wy -= wh;
-      */
-      wh *= 2;
+        // Make the underline corridor larger
+        /*
+        wy -= wh;
+        */
+        wh *= 2;
 
-      // Set the angle of the slope to 45Â°
-      ww = wh;
+        // Set the angle of the slope to 45Â°
+        ww = wh;
 
-      // Position of wave is independent of word, it's absolute
-      wx = (wx / (ww / 2)) * (ww / 2);
+        // Position of wave is independent of word, it's absolute
+        wx = (wx / (ww / 2)) * (ww / 2);
 
-      int marginStart = winx - wx;
+        int marginStart = winx - wx;
 
-      // Calculate number of points with floating precision
-      float n = width;  // Width of word in pixels
-      n = (n / ww) * 2; // Number of slopes (/ or \)
-      n += 2;           // Add two last points
-      int npoints = n;  // Convert to int
+        // Calculate number of points with floating precision
+        float n = width;  // Width of word in pixels
+        n = (n / ww) * 2; // Number of slopes (/ or \)
+        n += 2;           // Add two last points
+        int npoints = n;  // Convert to int
 
-      // Total length of underline
-      float waveLength = 0;
+        // Total length of underline
+        float waveLength = 0;
 
-      if (npoints >= 3) {
-        // We add an aditional slot in case we use a bonus point
-        XPoint *points = xmalloc(sizeof(XPoint) * (npoints + 1));
+        if (npoints >= 3) {
+          // We add an aditional slot in case we use a bonus point
+          XPoint *points = xmalloc(sizeof(XPoint) * (npoints + 1));
 
-        // First point (Starts with the word bounds)
-        points[0] = (XPoint){.x = wx + marginStart,
-                             .y = (isSlopeRising(wx, 0, ww))
-                                      ? (wy - marginStart + ww / 2.f)
-                                      : (wy + marginStart)};
+          // First point (Starts with the word bounds)
+          points[0] = (XPoint){.x = wx + marginStart,
+                               .y = (isSlopeRising(wx, 0, ww))
+                                        ? (wy - marginStart + ww / 2.f)
+                                        : (wy + marginStart)};
 
-        // Second point (Goes back to the absolute point coordinates)
-        points[1] = (XPoint){.x = (ww / 2.f) - marginStart,
-                             .y = (isSlopeRising(wx, 1, ww))
-                                      ? (ww / 2.f - marginStart)
-                                      : (-ww / 2.f + marginStart)};
-        waveLength += (ww / 2.f) - marginStart;
+          // Second point (Goes back to the absolute point coordinates)
+          points[1] = (XPoint){.x = (ww / 2.f) - marginStart,
+                               .y = (isSlopeRising(wx, 1, ww))
+                                        ? (ww / 2.f - marginStart)
+                                        : (-ww / 2.f + marginStart)};
+          waveLength += (ww / 2.f) - marginStart;
 
-        // The rest of the points
-        for (int i = 2; i < npoints - 1; i++) {
-          points[i] = (XPoint){
-              .x = ww / 2, .y = (isSlopeRising(wx, i, ww)) ? wh / 2 : -wh / 2};
+          // The rest of the points
+          for (int i = 2; i < npoints - 1; i++) {
+            points[i] =
+                (XPoint){.x = ww / 2,
+                         .y = (isSlopeRising(wx, i, ww)) ? wh / 2 : -wh / 2};
+            waveLength += ww / 2;
+          }
+
+          // Last point
+          points[npoints - 1] = (XPoint){
+              .x = ww / 2,
+              .y = (isSlopeRising(wx, npoints - 1, ww)) ? wh / 2 : -wh / 2};
           waveLength += ww / 2;
-        }
 
-        // Last point
-        points[npoints - 1] = (XPoint){
-            .x = ww / 2,
-            .y = (isSlopeRising(wx, npoints - 1, ww)) ? wh / 2 : -wh / 2};
-        waveLength += ww / 2;
+          // End
+          if (waveLength < width) { // Add a bonus point?
+            int marginEnd = width - waveLength;
+            points[npoints] =
+                (XPoint){.x = marginEnd,
+                         .y = (isSlopeRising(wx, npoints, ww)) ? (marginEnd)
+                                                               : (-marginEnd)};
 
-        // End
-        if (waveLength < width) { // Add a bonus point?
-          int marginEnd = width - waveLength;
-          points[npoints] =
-              (XPoint){.x = marginEnd,
-                       .y = (isSlopeRising(wx, npoints, ww)) ? (marginEnd)
-                                                             : (-marginEnd)};
+            npoints++;
+          } else if (waveLength > width) { // Is last point too far?
+            int marginEnd = waveLength - width;
+            points[npoints - 1].x -= marginEnd;
+            if (isSlopeRising(wx, npoints - 1, ww))
+              points[npoints - 1].y -= (marginEnd);
+            else
+              points[npoints - 1].y += (marginEnd);
+          }
 
-          npoints++;
-        } else if (waveLength > width) { // Is last point too far?
-          int marginEnd = waveLength - width;
-          points[npoints - 1].x -= marginEnd;
-          if (isSlopeRising(wx, npoints - 1, ww))
-            points[npoints - 1].y -= (marginEnd);
-          else
-            points[npoints - 1].y += (marginEnd);
-        }
-
-        // Draw the lines
-        XDrawLines(xw.dpy, XftDrawDrawable(xw.draw), ugc, points, npoints,
-                   CoordModePrevious);
-
-        // Draw a second underline with an offset of 1 pixel
-        if (((win.ch / (widthThreshold / 2)) % 2)) {
-          points[0].x++;
-
+          // Draw the lines
           XDrawLines(xw.dpy, XftDrawDrawable(xw.draw), ugc, points, npoints,
                      CoordModePrevious);
-        }
 
-        // Free resources
-        free(points);
+          // Draw a second underline with an offset of 1 pixel
+          if (((win.ch / (widthThreshold / 2)) % 2)) {
+            points[0].x++;
+
+            XDrawLines(xw.dpy, XftDrawDrawable(xw.draw), ugc, points, npoints,
+                       CoordModePrevious);
+          }
+
+          // Free resources
+          free(points);
+        }
       }
+
+      XFreeGC(xw.dpy, ugc);
     }
 
-    XFreeGC(xw.dpy, ugc);
-  }
-
-  if (base.mode & ATTR_STRUCK) {
-    XftDrawRect(xw.draw, fg, winx,
-                winy + win.cyo + 2 * dc.font.ascent * chscale / 3, width, 1);
+    if (base.mode & ATTR_STRUCK) {
+      XftDrawRect(xw.draw, fg, winx,
+                  winy + win.cyo + 2 * dc.font.ascent * chscale / 3, width, 1);
+    }
   }
 
   /* Reset clip to none. */
@@ -1564,7 +1572,7 @@ void xdrawglyph(Glyph g, int x, int y) {
   XftGlyphFontSpec spec;
 
   numspecs = xmakeglyphfontspecs(&spec, &g, 1, x, y);
-  xdrawglyphfontspecs(&spec, g, numspecs, x, y);
+  xdrawglyphfontspecs(&spec, g, numspecs, x, y, DRAW_BG | DRAW_FG);
 }
 
 void xdrawcursor(int cx, int cy, Glyph g, int ox, int oy, Glyph og, Line line,
@@ -1677,32 +1685,39 @@ void xsettitle(char *p) {
 int xstartdraw(void) { return IS_SET(MODE_VISIBLE); }
 
 void xdrawline(Line line, int x1, int y1, int x2) {
-  int i, x, ox, numspecs;
+  int i, x, ox, numspecs, numspecs_cached;
   Glyph base, new;
-  XftGlyphFontSpec *specs = xw.specbuf;
+  XftGlyphFontSpec *specs;
 
-  numspecs = xmakeglyphfontspecs(specs, &line[x1], x2 - x1, x1, y1);
-  i = ox = 0;
-  for (x = x1; x < x2 && i < numspecs; x++) {
-    new = line[x];
-    if (new.mode == ATTR_WDUMMY)
-      continue;
-    if (selected(x, y1))
-      new.mode ^= ATTR_REVERSE;
-    if (i > 0 && ATTRCMP(base, new)) {
-      xdrawglyphfontspecs(specs, base, i, ox, y1);
-      specs += i;
-      numspecs -= i;
-      i = 0;
+  numspecs_cached = xmakeglyphfontspecs(xw.specbuf, &line[x1], x2 - x1, x1, y1);
+
+  /* Draw line in 2 passes: background and foreground. This way wide glyphs
+     won't get truncated (#223) */
+  for (int dmode = DRAW_BG; dmode <= DRAW_FG; dmode <<= 1) {
+    specs = xw.specbuf;
+    numspecs = numspecs_cached;
+    i = ox = 0;
+    for (x = x1; x < x2 && i < numspecs; x++) {
+      new = line[x];
+      if (new.mode == ATTR_WDUMMY)
+        continue;
+      if (selected(x, y1))
+        new.mode ^= ATTR_REVERSE;
+      if (i > 0 && ATTRCMP(base, new)) {
+        xdrawglyphfontspecs(specs, base, i, ox, y1, dmode);
+        specs += i;
+        numspecs -= i;
+        i = 0;
+      }
+      if (i == 0) {
+        ox = x;
+        base = new;
+      }
+      i++;
     }
-    if (i == 0) {
-      ox = x;
-      base = new;
-    }
-    i++;
+    if (i > 0)
+      xdrawglyphfontspecs(specs, base, i, ox, y1, dmode);
   }
-  if (i > 0)
-    xdrawglyphfontspecs(specs, base, i, ox, y1);
 }
 
 void xfinishdraw(void) {
