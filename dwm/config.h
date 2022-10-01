@@ -61,7 +61,8 @@ static Key keys[] = {
     {SCRIPT, XK_d, spawn, SHCMD("doc")},
     {SCRIPT, XK_r, spawn, SHCMD("rbt")},
     {SCRIPT, XK_s, spawn, SHCMD("sdn")},
-    {SCRIPT, XK_m, spawn, SHCMD("smon; sbg")},
+    {SCRIPT, XK_m, spawn, SHCMD("mus")},
+    {SCRIPT, XK_x, spawn, SHCMD("smon; sbg")},
 
     /* Window altering */
     {MODKEY, XK_a, focusstack, {.i = -1}},
@@ -98,7 +99,7 @@ static Key keys[] = {
 
     TAGKEYS(XK_1, 0) TAGKEYS(XK_2, 1) TAGKEYS(XK_3, 2) TAGKEYS(XK_4, 3)
         TAGKEYS(XK_5, 4) TAGKEYS(XK_6, 5) TAGKEYS(XK_7, 6) TAGKEYS(XK_8, 7)
-            TAGKEYS(XK_9, 8){MODKEY | ShiftMask, XK_q, quit, {0}},
+            TAGKEYS(XK_9, 8)
 
     /* Layouts */
     {MODKEYS, XK_t, setlayout, {.v = &layouts[0]}},
