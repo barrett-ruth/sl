@@ -213,7 +213,7 @@ static Shortcut shortcuts[] = {
     {TERMMODS, XK_K, kscrollup, {.i = 18}},
 
     // Urls
-    {SCRIPT, XK_c, externalpipe, SHCMD("url copy")},
+    {SCRIPT, XK_y, externalpipe, SHCMD("url copy")},
     {SCRIPT, XK_o, externalpipe, SHCMD("url open")},
 };
 
