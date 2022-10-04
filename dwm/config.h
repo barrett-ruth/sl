@@ -62,6 +62,9 @@ static Key keys[] = {
     {SCRIPT, XK_r, spawn, SHCMD("rbt")},
     {SCRIPT, XK_s, spawn, SHCMD("sdn")},
     {SCRIPT, XK_m, spawn, SHCMD("mus")},
+    {SCRIPT, XK_p, spawn, SHCMD("mus prev")},
+    {SCRIPT, XK_n, spawn, SHCMD("mus next")},
+    {SCRIPT, XK_t, spawn, SHCMD("mus toggle")},
     {SCRIPT, XK_x, spawn, SHCMD("smon; sbg")},
 
     /* Window altering */
