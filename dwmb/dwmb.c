@@ -9,7 +9,7 @@
 #define SIGPLUS SIGRTMIN
 #define SIGMINUS SIGRTMIN
 #define LENGTH(X) (sizeof(X) / sizeof(X[0]))
-#define CMDLENGTH 60
+#define CMDLENGTH 80
 #define MIN(a, b) ((a < b) ? a : b)
 #define STATUSLENGTH (LENGTH(blocks) * CMDLENGTH + 1)
 
