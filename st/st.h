@@ -37,6 +37,12 @@ enum glyph_attribute {
   ATTR_DIRTYUNDERLINE = 1 << 15,
 };
 
+enum drawing_mode {
+  DRAW_NONE = 0,
+  DRAW_BG = 1 << 0,
+  DRAW_FG = 1 << 1,
+};
+
 enum selection_mode { SEL_IDLE = 0, SEL_EMPTY = 1, SEL_READY = 2 };
 
 enum selection_type { SEL_REGULAR = 1, SEL_RECTANGULAR = 2 };
@@ -52,10 +58,10 @@ typedef uint_least32_t Rune;
 
 #define Glyph Glyph_
 typedef struct {
-  Rune u;      /* character code */
-  ushort mode; /* attribute flags */
-  uint32_t fg; /* foreground  */
-  uint32_t bg; /* background  */
+  Rune u;        /* character code */
+  ushort mode;   /* attribute flags */
+  uint32_t fg;   /* foreground  */
+  uint32_t bg;   /* background  */
   int ustyle;    /* underline style */
   int ucolor[3]; /* underline color */
 } Glyph;
