@@ -1394,7 +1394,7 @@ void xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len,
     if (winy + win.ch >= borderpx + win.th)
       xclear(winx, winy + win.ch, winx + width, win.h);
 
-    /* Clean up the region we want to draw to. */
+    /* Fill the background */
     XftDrawRect(xw.draw, bg, winx, winy, width, win.ch);
 
     /* Set the clip region because Xft is sometimes dirty. */
@@ -1403,7 +1403,6 @@ void xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len,
     r.height = win.ch;
     r.width = width;
     XftDrawSetClipRectangles(xw.draw, winx, winy, &r, 1);
-    XftDrawRect(xw.draw, bg, winx, winy, width, win.ch);
   }
 
   if (dmode & DRAW_FG) {
@@ -1680,6 +1679,7 @@ void xdrawline(Line line, int x1, int y1, int x2) {
   XftGlyphFontSpec *specs;
 
   numspecs_cached = xmakeglyphfontspecs(xw.specbuf, &line[x1], x2 - x1, x1, y1);
+
   for (int dmode = DRAW_BG; dmode <= DRAW_FG; dmode <<= 1) {
     specs = xw.specbuf;
     numspecs = numspecs_cached;
