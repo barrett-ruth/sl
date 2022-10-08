@@ -65,6 +65,7 @@ static Key keys[] = {
     {SCRIPT, XK_p, spawn, SHCMD("mus prev")},
     {SCRIPT, XK_n, spawn, SHCMD("mus next")},
     {SCRIPT, XK_t, spawn, SHCMD("mus toggle")},
+    {SCRIPT, XK_w, spawn, SHCMD("doas systemctl restart iwd")},
     {SCRIPT, XK_x, spawn, SHCMD("smon; sbg")},
 
     /* Window altering */
