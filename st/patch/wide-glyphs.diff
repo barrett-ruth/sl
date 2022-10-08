@@ -112,15 +112,16 @@ index ca397ee..ebfc766 100644
 +    if (winy + win.ch >= borderpx + win.th)
 +      xclear(winx, winy + win.ch, winx + width, win.h);
 +
++    /* Set the clip region because Xft is sometimes dirty. */
++    r.x = 0;
++    r.y = 0;
++    r.height = win.ch;
++    r.width = width;
++    XftDrawSetClipRectangles(xw.draw, winx, winy, &r, 1);
++
 +    /* Fill the background */
 +    XftDrawRect(xw.draw, bg, winx, winy, width, win.ch);
 +  }
-+  /* Set the clip region because Xft is sometimes dirty. */
-+  r.x = 0;
-+  r.y = 0;
-+  r.height = win.ch;
-+  r.width = width;
-+  XftDrawSetClipRectangles(xw.draw, winx, winy, &r, 1);
  
 -    XGCValues ugcv = {.foreground = linecolor,
 -                      .line_width = wlw,
