@@ -20,7 +20,13 @@
 #include "st.h"
 #include "win.h"
 
+#if defined(__linux)
 #include <pty.h>
+#elif defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
+#include <util.h>
+#elif defined(__FreeBSD__) || defined(__DragonFly__)
+#include <libutil.h>
+#endif
 
 /* Arbitrary sizes */
 #define UTF_INVALID 0xFFFD
@@ -159,8 +165,8 @@ static void sigchld(int);
 static void ttywriteraw(const char *, size_t);
 
 static void csidump(void);
-static void csihandle(void);
 static void readcolonargs(char **, int, int[][CAR_PER_ARG]);
+static void csihandle(void);
 static void csiparse(void);
 static void csireset(void);
 static void osc_color_response(int, int, int);
@@ -506,7 +512,7 @@ void selsnap(int *x, int *y, int direction) {
       if (newx >= tlinelen(newy))
         break;
 
-      gp = &TLINE(newy)[newx];
+      gp = &term.line[newy][newx];
       delim = ISDELIM(gp->u);
       if (!(gp->mode & ATTR_WDUMMY) &&
           (delim != prevdelim || (delim && gp->u != prevgp->u)))
@@ -745,9 +751,17 @@ int ttynew(const char *line, char *cmd, const char *out, char **args) {
       die("ioctl TIOCSCTTY failed: %s\n", strerror(errno));
     if (s > 2)
       close(s);
+#ifdef __OpenBSD__
+    if (pledge("stdio getpw proc exec", NULL) == -1)
+      die("pledge\n");
+#endif
     execsh(cmd, args);
     break;
   default:
+#ifdef __OpenBSD__
+    if (pledge("stdio rpath tty proc", NULL) == -1)
+      die("pledge\n");
+#endif
     close(s);
     cmdfd = m;
     signal(SIGCHLD, sigchld);
@@ -961,6 +975,8 @@ void tnew(int col, int row) {
   treset();
 }
 
+int tisaltscr(void) { return IS_SET(MODE_ALTSCREEN); }
+
 void tswapscreen(void) {
   Line *tmp = term.line;
 
@@ -1050,7 +1066,8 @@ void tscrollup(int orig, int n, int copyhist) {
     term.line[i + n] = temp;
   }
 
-  selscroll(orig, -n);
+  if (term.scr == 0)
+    selscroll(orig, -n);
 }
 
 void selscroll(int orig, int n) {
@@ -1184,6 +1201,8 @@ void tsetchar(Rune u, const Glyph *attr, int x, int y) {
   term.dirty[y] = 1;
   term.line[y][x] = *attr;
   term.line[y][x].u = u;
+  if (isboxdraw(u))
+    term.line[y][x].mode |= ATTR_BOXDRAW;
 }
 
 void tclearregion(int x1, int y1, int x2, int y2) {
@@ -2581,9 +2600,15 @@ void draw(void) {
     cx--;
 
   drawregion(0, 0, term.col, term.row);
-  if (term.scr == 0)
+  // Draw current line to format ligatures properly.
+  if (term.scr == 0) {
+    xdrawline(term.line[term.c.y], 0, term.c.y, term.col);
     xdrawcursor(cx, term.c.y, term.line[term.c.y][cx], term.ocx, term.ocy,
-                term.line[term.ocy][term.ocx], term.line[term.ocy], term.col);
+                term.line[term.ocy][term.ocx], term.line[ocy], term.col);
+  }
+  // If cursor was on a transformed glyph, we need to redraw the previous line
+  if (term.ocy != term.c.y && (term.line[term.ocy][term.ocx].mode & ATTR_LIGA))
+    xdrawline(term.line[term.ocy], 0, term.ocy, term.col);
   term.ocx = cx;
   term.ocy = term.c.y;
   xfinishdraw();

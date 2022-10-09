@@ -5,7 +5,7 @@
  *
  * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
  */
-static char *font = "Fira Code:pixelsize=40:antialias=true:autohint=true";
+static char *font = "monospace:pixelsize=40:antialias=true:autohint=true";
 static int borderpx = 0;
 
 /*
@@ -66,6 +66,18 @@ static unsigned int blinktimeout = 800;
  * thickness of underline and bar cursors
  */
 static unsigned int cursorthickness = 2;
+
+/*
+ * 1: render most of the lines/blocks characters without using the font for
+ *    perfect alignment between cells (U2500 - U259F except dashes/diagonals).
+ *    Bold affects lines thickness if boxdraw_bold is not 0. Italic is ignored.
+ * 0: disable (render all U25XX glyphs normally from the font).
+ */
+const int boxdraw = 0;
+const int boxdraw_bold = 0;
+
+/* braille (U28XX):  1: render as adjacent "pixels",  0: use font */
+const int boxdraw_braille = 0;
 
 /*
  * bell volume. It must be a value between -100 and 100. Use 0 for disabling
@@ -162,27 +174,15 @@ static unsigned int defaultattr = 11;
 static uint forcemousemod = ShiftMask;
 
 /*
- * internal mouse shortcuts.
- * beware that overloading button1 will disable the selection.
+ * Internal Mouse Shortcuts.
+ * Beware that overloading Button1 will disable the selection.
  */
 static MouseShortcut mshortcuts[] = {
     /* mask                 button   function        argument       release */
     {ShiftMask, Button4, ttysend, {.s = "\033[5;2~"}},
     {ShiftMask, Button5, ttysend, {.s = "\033[6;2~"}},
-    {
-        XK_ANY_MOD,
-        Button4,
-        kscrollup,
-        {.i = 3},
-        0,
-    },
-    {
-        XK_ANY_MOD,
-        Button5,
-        kscrolldown,
-        {.i = 3},
-        0,
-    },
+    {XK_ANY_MOD, Button4, kscrollup, {.i = 3}, 0, -1},
+    {XK_ANY_MOD, Button5, kscrolldown, {.i = 3}, 0, -1},
 };
 
 /* Internal keyboard shortcuts. */

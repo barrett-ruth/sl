@@ -35,6 +35,7 @@ typedef struct {
   void (*func)(const Arg *);
   const Arg arg;
   uint release;
+  int altscrn; /* 0: don't care, -1: not alt screen, 1: alt screen */
 } MouseShortcut;
 
 typedef struct {
@@ -428,6 +429,7 @@ int mouseaction(XEvent *e, uint release) {
 
   for (ms = mshortcuts; ms < mshortcuts + LEN(mshortcuts); ms++) {
     if (ms->release == release && ms->button == e->xbutton.button &&
+        (!ms->altscrn || (ms->altscrn == (tisaltscr() ? 1 : -1))) &&
         (match(ms->mod, state) || /* exact or forced */
          match(ms->mod, state & ~forcemousemod))) {
       ms->func(&(ms->arg));
@@ -974,6 +976,7 @@ void xunloadfont(Font *f) {
 void xunloadfonts(void) {
   /* Clear Harfbuzz font cache. */
   hbunloadfonts();
+
   /* Free the loaded fonts in the font cache.  */
   while (frclen > 0)
     XftFontClose(xw.dpy, frc[--frclen].font);
@@ -1051,8 +1054,8 @@ void xinit(int cols, int rows) {
   xloadcols();
 
   /* adjust fixed window geometry */
-  win.w = win.hborderpx + 2 * borderpx + cols * win.cw;
-  win.h = win.vborderpx + 2 * borderpx + rows * win.ch;
+  win.w = 2 * win.hborderpx + 2 * borderpx + cols * win.cw;
+  win.h = 2 * win.vborderpx + 2 * borderpx + rows * win.ch;
   if (xw.gm & XNegative)
     xw.l += DisplayWidth(xw.dpy, xw.scr) - win.w - 2;
   if (xw.gm & YNegative)
@@ -1137,11 +1140,14 @@ void xinit(int cols, int rows) {
   xsel.xtarget = XInternAtom(xw.dpy, "UTF8_STRING", 0);
   if (xsel.xtarget == None)
     xsel.xtarget = XA_STRING;
+
+  boxdraw_xinit(xw.dpy, xw.cmap, xw.draw, xw.vis);
 }
 
 int xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len,
                         int x, int y) {
-  float winx = win.hborderpx + x * win.cw, winy = win.vborderpx + y * win.ch, xp, yp;
+  float winx = win.hborderpx + x * win.cw, winy = win.vborderpx + y * win.ch,
+        xp, yp;
   ushort mode, prevmode = USHRT_MAX;
   Font *font = &dc.font;
   int frcflags = FRC_NORMAL;
@@ -1154,7 +1160,7 @@ int xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len,
   FcCharSet *fccharset;
   int i, f, numspecs = 0;
 
-  for (i = 0, xp = winx, yp = winy + font->ascent + win.cyo; i < len; ++i) {
+  for (i = 0, xp = winx, yp = winy + font->ascent; i < len; ++i) {
     /* Fetch rune and mode for current glyph. */
     rune = glyphs[i].u;
     mode = glyphs[i].mode;
@@ -1182,8 +1188,13 @@ int xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len,
       yp = winy + font->ascent + win.cyo;
     }
 
-    /* Lookup character index with default font. */
-    glyphidx = XftCharIndex(xw.dpy, font->match, rune);
+    if (mode & ATTR_BOXDRAW) {
+      /* minor shoehorning: boxdraw uses only this ushort */
+      glyphidx = boxdrawindex(&glyphs[i]);
+    } else {
+      /* Lookup character index with default font. */
+      glyphidx = XftCharIndex(xw.dpy, font->match, rune);
+    }
     if (glyphidx) {
       specs[numspecs].font = font->match;
       specs[numspecs].glyph = glyphidx;
@@ -1390,11 +1401,13 @@ void xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len,
   /* Intelligent cleaning up of the borders. */
   if (x == 0) {
     xclear(0, (y == 0) ? 0 : winy, win.vborderpx,
-           winy + win.ch + ((winy + win.ch >= win.vborderpx + win.th) ? win.h : 0));
+           winy + win.ch +
+               ((winy + win.ch >= win.vborderpx + win.th) ? win.h : 0));
   }
   if (winx + width >= win.hborderpx + win.tw) {
-    xclear(winx + width, (y == 0) ? 0 : winy, win.w,
-           ((winy + win.ch >= win.vborderpx + win.th) ? win.h : (winy + win.ch)));
+    xclear(
+        winx + width, (y == 0) ? 0 : winy, win.w,
+        ((winy + win.ch >= win.vborderpx + win.th) ? win.h : (winy + win.ch)));
   }
   if (y == 0)
     xclear(winx, 0, winx + width, win.vborderpx);
@@ -1411,10 +1424,14 @@ void xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len,
   r.width = width;
   XftDrawSetClipRectangles(xw.draw, winx, winy, &r, 1);
 
-  /* Render the glyphs. */
-  XftDrawGlyphFontSpec(xw.draw, fg, specs, len);
+  if (base.mode & ATTR_BOXDRAW) {
+    drawboxes(winx, winy, width / len, win.ch, fg, bg, specs, len);
+  } else {
+    /* Render the glyphs. */
+    XftDrawGlyphFontSpec(xw.draw, fg, specs, len);
+  }
 
-  /* Render underline and strikethrough. [: */
+  /* Render underline and strikethrough. */
   if (base.mode & ATTR_UNDERLINE) {
     // Underline Color
     const int widthThreshold = 28; // +1 width every widthThreshold px of font
@@ -1469,7 +1486,7 @@ void xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len,
       */
       wh *= 2;
 
-      // Set the angle of the slope to 45Â°
+      // Set the angle of the slope to 45°
       ww = wh;
 
       // Position of wave is independent of word, it's absolute
@@ -1552,7 +1569,7 @@ void xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len,
     }
 
     XFreeGC(xw.dpy, ugc);
-  } // :]
+  }
 
   if (base.mode & ATTR_STRUCK) {
     XftDrawRect(xw.draw, fg, winx,
@@ -1589,7 +1606,8 @@ void xdrawcursor(int cx, int cy, Glyph g, int ox, int oy, Glyph og, Line line,
   /*
    * Select the right color for the right mode.
    */
-  g.mode &= ATTR_BOLD | ATTR_ITALIC | ATTR_UNDERLINE | ATTR_STRUCK | ATTR_WIDE;
+  g.mode &= ATTR_BOLD | ATTR_ITALIC | ATTR_UNDERLINE | ATTR_STRUCK | ATTR_WIDE |
+            ATTR_BOXDRAW;
 
   if (IS_SET(MODE_REVERSE)) {
     g.mode |= ATTR_REVERSE;
@@ -1685,10 +1703,8 @@ void xdrawline(Line line, int x1, int y1, int x2) {
   Glyph base, new;
   XftGlyphFontSpec *specs = xw.specbuf;
 
-  numspecs = xmakeglyphfontspecs(xw.specbuf, &line[x1], x2 - x1, x1, y1);
+  numspecs = xmakeglyphfontspecs(specs, &line[x1], x2 - x1, x1, y1);
   i = ox = 0;
-
-  specs = xw.specbuf;
   for (x = x1; x < x2 && i < numspecs; x++) {
     new = line[x];
     if (new.mode == ATTR_WDUMMY)
