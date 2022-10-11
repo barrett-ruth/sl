@@ -57,6 +57,7 @@ static Key keys[] = {
     {MODKEY, XK_Return, spawn, SHCMD("st")},
 
     /* Scripts */
+    {SCRIPT, XK_b, spawn, SHCMD("book")},
     {SCRIPT, XK_c, spawn, SHCMD("clipmenu")},
     {SCRIPT, XK_d, spawn, SHCMD("doc")},
     {SCRIPT, XK_r, spawn, SHCMD("rbt")},
