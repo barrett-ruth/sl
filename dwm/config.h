@@ -57,9 +57,9 @@ static Key keys[] = {
     {MODKEY, XK_Return, spawn, SHCMD("st")},
 
     /* Scripts */
-    {SCRIPT, XK_b, spawn, SHCMD("book")},
+    {SCRIPT, XK_b, spawn, SHCMD("doc book epub Books")},
     {SCRIPT, XK_c, spawn, SHCMD("clipmenu")},
-    {SCRIPT, XK_d, spawn, SHCMD("doc")},
+    {SCRIPT, XK_d, spawn, SHCMD("doc tb pdf Documents")},
     {SCRIPT, XK_r, spawn, SHCMD("rbt")},
     {SCRIPT, XK_s, spawn, SHCMD("sdn")},
     {SCRIPT, XK_m, spawn, SHCMD("mus")},
