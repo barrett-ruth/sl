@@ -8,9 +8,6 @@ index a72fdbb..83047d1 100644
  
 -  if (pid != p)
 +  if (pid != p) {
-+    if (p == 0 && wait(&stat) < 0)
-+      die("wait: %s\n", strerror(errno));
-+
 +    /* reinstall sigchld handler */
 +    signal(SIGCHLD, sigchld);
      return;

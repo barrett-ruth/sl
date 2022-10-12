@@ -676,9 +676,6 @@ void sigchld(int a) {
     die("waiting for pid %hd failed: %s\n", pid, strerror(errno));
 
   if (pid != p) {
-    if (p == 0 && wait(&stat) < 0)
-      die("wait: %s\n", strerror(errno));
-
     /* reinstall sigchld handler */
     signal(SIGCHLD, sigchld);
     return;
