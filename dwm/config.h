@@ -61,7 +61,7 @@ static Key keys[] = {
     {SCRIPT, XK_c, spawn, SHCMD("clipmenu")},
     {SCRIPT, XK_d, spawn, SHCMD("doc tb pdf Documents")},
     {SCRIPT, XK_r, spawn, SHCMD("rbt")},
-    {SCRIPT, XK_s, spawn, SHCMD("sdn")},
+    {SCRIPT, XK_s, spawn, SHCMD("sss")},
     {SCRIPT, XK_m, spawn, SHCMD("mus")},
     {SCRIPT, XK_p, spawn, SHCMD("mus prev")},
     {SCRIPT, XK_n, spawn, SHCMD("mus next")},
