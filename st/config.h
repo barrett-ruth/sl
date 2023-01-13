@@ -174,15 +174,15 @@ static unsigned int defaultattr = 11;
 static uint forcemousemod = ShiftMask;
 
 /*
- * Internal Mouse Shortcuts.
+ * Internal mouse shortcuts.
  * Beware that overloading Button1 will disable the selection.
  */
 static MouseShortcut mshortcuts[] = {
     /* mask                 button   function        argument       release */
     {ShiftMask, Button4, ttysend, {.s = "\033[5;2~"}},
     {ShiftMask, Button5, ttysend, {.s = "\033[6;2~"}},
-    {XK_ANY_MOD, Button4, kscrollup, {.i = 3}, 0, -1},
-    {XK_ANY_MOD, Button5, kscrolldown, {.i = 3}, 0, -1},
+    {XK_ANY_MOD, Button4, kscrollup, {.i = 3}, 0},
+    {XK_ANY_MOD, Button5, kscrolldown, {.i = 3}, 0},
 };
 
 /* Internal keyboard shortcuts. */
@@ -488,3 +488,5 @@ static uint selmasks[] = {
 static char ascii_printable[] = " !\"#$%&'()*+,-./0123456789:;<=>?"
                                 "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
                                 "`abcdefghijklmnopqrstuvwxyz{|}~";
+
+#define UNDERCURL_STYLE 1 // spiky
