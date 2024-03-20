@@ -57,18 +57,12 @@ static Key keys[] = {
     {MODKEY, XK_Return, spawn, SHCMD("st")},
 
     /* Scripts */
-    {SCRIPT, XK_b, spawn, SHCMD("doc book epub Books")},
     {SCRIPT, XK_c, spawn, SHCMD("clipmenu")},
-    {SCRIPT, XK_d, spawn, SHCMD("doc tb pdf Documents")},
     {SCRIPT, XK_k, spawn, SHCMD("skb toggle")},
     {SCRIPT, XK_r, spawn, SHCMD("rbt")},
     {SCRIPT, XK_s, spawn, SHCMD("sss")},
-    {SCRIPT, XK_m, spawn, SHCMD("mus")},
-    {SCRIPT, XK_p, spawn, SHCMD("mus prev")},
-    {SCRIPT, XK_n, spawn, SHCMD("mus next")},
-    {SCRIPT, XK_t, spawn, SHCMD("mus toggle")},
     {SCRIPT, XK_w, spawn, SHCMD("doas systemctl restart iwd")},
-    {SCRIPT, XK_x, spawn, SHCMD("smon; sbg")},
+    {SCRIPT, XK_x, spawn, SHCMD("smon")},
 
     /* Window altering */
     {MODKEY, XK_a, focusstack, {.i = -1}},
@@ -94,14 +88,6 @@ static Key keys[] = {
     /* Quitting */
     {MODKEY, XK_q, killclient, {0}},
     {MODKEYS, XK_q, quit, {0}},
-
-    /* Fn Keys */
-    {0, XF86XK_MonBrightnessUp, spawn, SHCMD("luz up")},
-    {0, XF86XK_MonBrightnessDown, spawn, SHCMD("luz down")},
-    {0, XF86XK_AudioRaiseVolume, spawn, SHCMD("vol up")},
-    {0, XF86XK_AudioLowerVolume, spawn, SHCMD("vol down")},
-    {0, XF86XK_AudioMute, spawn, SHCMD("vol mute")},
-    {0, XF86XK_AudioPlay, spawn, SHCMD("vol toggle")},
 
     TAGKEYS(XK_1, 0) TAGKEYS(XK_2, 1) TAGKEYS(XK_3, 2) TAGKEYS(XK_4, 3)
         TAGKEYS(XK_5, 4) TAGKEYS(XK_6, 5) TAGKEYS(XK_7, 6) TAGKEYS(XK_8, 7)

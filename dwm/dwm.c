@@ -87,6 +87,7 @@ enum {
   ClkTagBar,
   ClkLtSymbol,
   ClkStatusText,
+  ClkWinTitle,
   ClkClientWin,
   ClkRootWin,
   ClkLast
@@ -158,15 +159,6 @@ struct Monitor {
   const Layout *lt[2];
 };
 
-typedef struct {
-  const char *class;
-  const char *instance;
-  const char *title;
-  unsigned int tags;
-  int isfloating;
-  int monitor;
-} Rule;
-
 /* function declarations */
 static void applyrules(Client *c);
 static int applysizehints(Client *c, int *x, int *y, int *w, int *h,
@@ -233,7 +225,6 @@ static void setmfact(const Arg *arg);
 static void setup(void);
 static void seturgent(Client *c, int urg);
 static void showhide(Client *c);
-static void sigchld(int unused);
 static void spawn(const Arg *arg);
 static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
@@ -451,8 +442,10 @@ void buttonpress(XEvent *e) {
       arg.ui = 1 << i;
     } else if (ev->x < x + TEXTW(selmon->ltsymbol))
       click = ClkLtSymbol;
-    else
+    else if (ev->x > selmon->ww - (int)TEXTW(stext))
       click = ClkStatusText;
+    else
+      click = ClkWinTitle;
   } else if ((c = wintoclient(ev->window))) {
     focus(c);
     restack(selmon);
@@ -692,6 +685,8 @@ Monitor *dirtomon(int dir) {
 
 void drawbar(Monitor *m) {
   int x, w, tw = 0;
+  int boxs = drw->fonts->h / 9;
+  int boxw = drw->fonts->h / 6 + 2;
   unsigned int i, occ = 0, urg = 0;
   Client *c;
 
@@ -726,8 +721,15 @@ void drawbar(Monitor *m) {
   x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
 
   if ((w = m->ww - tw - x) > bh) {
-    drw_setscheme(drw, scheme[SchemeNorm]);
-    drw_rect(drw, x, 0, w, bh, 1, 1);
+    if (m->sel) {
+      drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
+      drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
+      if (m->sel->isfloating)
+        drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
+    } else {
+      drw_setscheme(drw, scheme[SchemeNorm]);
+      drw_rect(drw, x, 0, w, bh, 1, 1);
+    }
   }
   drw_map(drw, m->barwin, 0, 0, m->ww, bh);
 }
@@ -1240,8 +1242,11 @@ void propertynotify(XEvent *e) {
       drawbars();
       break;
     }
-    if (ev->atom == XA_WM_NAME || ev->atom == netatom[NetWMName])
+    if (ev->atom == XA_WM_NAME || ev->atom == netatom[NetWMName]) {
       updatetitle(c);
+      if (c == c->mon->sel)
+        drawbar(c->mon);
+    }
     if (ev->atom == netatom[NetWMWindowType])
       updatewindowtype(c);
   }
@@ -1278,13 +1283,6 @@ void resizeclient(Client *c, int x, int y, int w, int h) {
   c->oldh = c->h;
   c->h = wc.height = h;
   wc.border_width = c->bw;
-  if (((nexttiled(c->mon->clients) == c && !nexttiled(c->next)) ||
-       &monocle == c->mon->lt[c->mon->sellt]->arrange) &&
-      !c->isfullscreen && !c->isfloating) {
-    c->w = wc.width += c->bw * 2;
-    c->h = wc.height += c->bw * 2;
-    wc.border_width = 0;
-  }
   XConfigureWindow(dpy, c->win, CWX | CWY | CWWidth | CWHeight | CWBorderWidth,
                    &wc);
   configure(c);
@@ -1521,9 +1519,17 @@ void setup(void) {
   int i;
   XSetWindowAttributes wa;
   Atom utf8string;
+  struct sigaction sa;
 
-  /* clean up any zombies immediately */
-  sigchld(0);
+  /* do not transform children into zombies when they terminate */
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_NOCLDSTOP | SA_NOCLDWAIT | SA_RESTART;
+  sa.sa_handler = SIG_IGN;
+  sigaction(SIGCHLD, &sa, NULL);
+
+  /* clean up any zombies (inherited from .xinitrc etc) immediately */
+  while (waitpid(-1, NULL, WNOHANG) > 0)
+    ;
 
   /* init screen */
   screen = DefaultScreen(dpy);
@@ -1615,18 +1621,19 @@ void showhide(Client *c) {
   }
 }
 
-void sigchld(int unused) {
-  if (signal(SIGCHLD, sigchld) == SIG_ERR)
-    die("can't install SIGCHLD handler:");
-  while (0 < waitpid(-1, NULL, WNOHANG))
-    ;
-}
-
 void spawn(const Arg *arg) {
+  struct sigaction sa;
+
   if (fork() == 0) {
     if (dpy)
       close(ConnectionNumber(dpy));
     setsid();
+
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sa.sa_handler = SIG_DFL;
+    sigaction(SIGCHLD, &sa, NULL);
+
     execvp(((char **)arg->v)[0], (char **)arg->v);
     die("dwm: execvp '%s' failed:", ((char **)arg->v)[0]);
   }
