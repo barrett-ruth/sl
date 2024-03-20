@@ -53,10 +53,11 @@ static Key keys[] = {
     /* modifier                     key        function        argument */
     {MODKEY, XK_b, togglebar, {0}},
     {MODKEY, XK_c, spawn, SHCMD("chromium")},
+    {MODKEY, XK_d, spawn, SHCMD("discord")},
+    {MODKEY, XK_e, spawn, SHCMD("element-desktop")},
     {MODKEY, XK_space, spawn, SHCMD("dmenu_run")},
     {MODKEY, XK_Return, spawn, SHCMD("st")},
 
-    /* Scripts */
     {SCRIPT, XK_c, spawn, SHCMD("clipmenu")},
     {SCRIPT, XK_k, spawn, SHCMD("skb toggle")},
     {SCRIPT, XK_r, spawn, SHCMD("rbt")},
@@ -64,7 +65,6 @@ static Key keys[] = {
     {SCRIPT, XK_w, spawn, SHCMD("doas systemctl restart iwd")},
     {SCRIPT, XK_x, spawn, SHCMD("smon; sbg")},
 
-    /* Window altering */
     {MODKEY, XK_a, focusstack, {.i = -1}},
     {MODKEY, XK_f, focusstack, {.i = +1}},
     {MODKEY, XK_i, incnmaster, {.i = +1}},
@@ -77,7 +77,6 @@ static Key keys[] = {
     {MODKEY, XK_l, setmfact, {.f = +0.05}},
     {MODKEY, XK_Tab, view, {0}},
 
-    /* Multiple Monitors */
     {MODKEY, XK_comma, focusmon, {.i = -1}},
     {MODKEY, XK_period, focusmon, {.i = +1}},
     {MODKEYS, XK_comma, tagmon, {.i = -1}},
@@ -85,7 +84,11 @@ static Key keys[] = {
     {MODKEYC, XK_comma, tagfocusmon, {.i = -1}},
     {MODKEYC, XK_period, tagfocusmon, {.i = +1}},
 
-    /* Quitting */
+    {SCRIPT, XK_u, spawn, SHCMD("vol up")},
+    {SCRIPT, XK_d, spawn, SHCMD("vol down")},
+    {SCRIPT, XK_m, spawn, SHCMD("vol mute")},
+    {SCRIPT, XK_t, spawn, SHCMD("vol toggle")},
+
     {MODKEY, XK_q, killclient, {0}},
     {MODKEYS, XK_q, quit, {0}},
 
