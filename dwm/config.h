@@ -62,7 +62,7 @@ static Key keys[] = {
     {SCRIPT, XK_r, spawn, SHCMD("rbt")},
     {SCRIPT, XK_s, spawn, SHCMD("sss")},
     {SCRIPT, XK_w, spawn, SHCMD("doas systemctl restart iwd")},
-    {SCRIPT, XK_x, spawn, SHCMD("smon")},
+    {SCRIPT, XK_x, spawn, SHCMD("smon; sbg")},
 
     /* Window altering */
     {MODKEY, XK_a, focusstack, {.i = -1}},
