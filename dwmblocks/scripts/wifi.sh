@@ -7,4 +7,4 @@ if [ -n "$station" ]; then
 fi
 ssid="${ssid:-n/a}"
 
-echo "$ssid │ "
+echo "$ssid | "

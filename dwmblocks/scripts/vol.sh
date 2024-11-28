@@ -10,6 +10,6 @@ vol="${vol%?}"
 
 vol=" ${vol:-n/a}$muted"
 
-echo "$vol │ "
+echo "$vol | "
 
 unset vol muted sink_info sink_id

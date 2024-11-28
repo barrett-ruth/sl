@@ -19,6 +19,6 @@ else
   >"$STATE_FILE" 2>/dev/null
 fi
 
-[ -n "$bat" ] && echo "$bat% │ "
+[ -n "$bat" ] && echo "$bat% | "
 
 unset bat status
