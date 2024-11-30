@@ -1,7 +1,7 @@
 /* See LICENSE file for copyright and license details. */
+#include <X11/XF86keysym.h>
 #include <stdlib.h>
 #include <string.h>
-#include <X11/XF86keysym.h>
 
 /* appearance */
 static const unsigned int borderpx = 5; /* border pixel of windows */
@@ -12,25 +12,25 @@ static const char *fonts[] = {"Gravitica Mono:size=14"};
 static const char *colors[2][3];
 
 __attribute__((constructor)) void theme() {
-    const char *theme = getenv("THEME");
+  const char *theme = getenv("THEME");
 
-    if (theme && strcmp(theme, "gruvbox") == 0) {
-        colors[SchemeNorm][0] = "#d4be98"; /* fg */
-        colors[SchemeNorm][1] = "#282828"; /* bg */
-        colors[SchemeNorm][2] = "#282828"; /* border */
+  if (theme && strcmp(theme, "gruvbox") == 0) {
+    colors[SchemeNorm][0] = "#d4be98"; /* fg */
+    colors[SchemeNorm][1] = "#282828"; /* bg */
+    colors[SchemeNorm][2] = "#282828"; /* border */
 
-        colors[SchemeSel][0] = "#282828"; /* fg */
-        colors[SchemeSel][1] = "#a89984"; /* bg */
-        colors[SchemeSel][2] = "#a89984"; /* border */
-    } else {
-        colors[SchemeNorm][0] = "#ffffff"; /* fg */
-        colors[SchemeNorm][1] = "#000000"; /* bg */
-        colors[SchemeNorm][2] = "#000000"; /* border */
+    colors[SchemeSel][0] = "#282828"; /* fg */
+    colors[SchemeSel][1] = "#a89984"; /* bg */
+    colors[SchemeSel][2] = "#a89984"; /* border */
+  } else {
+    colors[SchemeNorm][0] = "#ffffff"; /* fg */
+    colors[SchemeNorm][1] = "#000000"; /* bg */
+    colors[SchemeNorm][2] = "#000000"; /* border */
 
-        colors[SchemeSel][0] = "#000000"; /* fg */
-        colors[SchemeSel][1] = "#ffffff"; /* bg */
-        colors[SchemeSel][2] = "#ffffff"; /* border */
-    }
+    colors[SchemeSel][0] = "#000000"; /* fg */
+    colors[SchemeSel][1] = "#ffffff"; /* bg */
+    colors[SchemeSel][2] = "#ffffff"; /* border */
+  }
 }
 
 /* tagging */
@@ -90,7 +90,7 @@ static Key keys[] = {
     {0, XF86XK_AudioRaiseVolume, spawn, SHCMD("vol up")},
     {0, XF86XK_AudioLowerVolume, spawn, SHCMD("vol down")},
     {0, XF86XK_AudioMute, spawn, SHCMD("vol mute")},
-    {0, XF86XK_Messenger, spawn, SHCMD("cycle-brightness")},
+    {0, XF86XK_Display, spawn, SHCMD("cycle-brightness")},
 
     {SCRIPT, XK_a, spawn, SHCMD("set-speaker")},
     {SCRIPT, XK_c, spawn, SHCMD("clipmenu")},
