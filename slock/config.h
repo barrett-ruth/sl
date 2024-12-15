@@ -21,17 +21,4 @@ static const char *colorname[NUMCOLS] = {
 static const int failonclear = 1;
 
 /* Background image path, should be available to the user above */
-static const char *background_image;
-static const char *image_name = "lock.jpg";
-static char *path;
-
-__attribute__((constructor)) void set_background_image() {
-  const char *dir = dirname(strdup(__FILE__));
-  size_t len = strlen(dir) + strlen(image_name) + 2;
-  path = (char *)malloc(len);
-  snprintf(path, len, "%s/%s", dir, image_name);
-  background_image = path;
-}
-__attribute__((destructor)) void cleanup_background_image() {
-  free((void *)path);
-}
+static const char *background_image = "/home/barrett/dev/sl/slock/lock.jpg";
