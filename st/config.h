@@ -149,25 +149,25 @@ __attribute__((constructor)) void theme() {
 		defaultcs = 15;
 		defaultrcs = 257;
 	} else {
-                /* 8 normal colors */
-       	        colorname[0] = "#000000"; /* black */
-       	        colorname[1] = "#ff0000"; /* red */
-       	        colorname[2] = "#00ff00"; /* green */
-       	        colorname[3] = "#ffa500"; /* orange; yellow #ffff00 */
-       	        colorname[4] = "#0000ff"; /* blue */
-       	        colorname[5] = "#ff00ff"; /* magenta */
-       	        colorname[6] = "#00ffff"; /* cyan */
+       	        /* 8 normal colors */
+       	        colorname[0] = "#000000";  /* black */
+       	        colorname[1] = "#b22222";  /* red */
+       	        colorname[2] = "#228b22"; /* green */
+       	        colorname[3] = "#b8860B"; /* orange*/
+       	        colorname[4] = "#27408B"; /* blue */
+       	        colorname[5] = "#8b008B"; /* magenta */
+       	        colorname[6] = "#00bffF"; /* cyan */
        	        colorname[7] = "#ffffff"; /* white */
 
-       	        /* 8 bright colors */
-       	        colorname[8] = "#555555";  /* black (bright) */
-       	        colorname[9] = "#ff5555";  /* red (bright) */
-       	        colorname[10] = "#55ff55"; /* green (bright) */
-       	        colorname[11] = "#ffae42"; /* orange(bright); yellow (bright) #ffff55 */
-       	        colorname[12] = "#5555ff"; /* blue (bright) */
-       	        colorname[13] = "#ff55ff"; /* magenta (bright) */
-       	        colorname[14] = "#55ffff"; /* cyan (bright) */
-       	        colorname[15] = "#ffffff"; /* white (bright) */
+                /* 8 bright colors */
+       	        colorname[8] = "#555555"; /* black */
+       	        colorname[9] = "#ff0000"; /* red */
+       	        colorname[10] = "#00ff00"; /* green */
+       	        colorname[11] = "#ffa500"; /* orange */
+       	        colorname[12] = "#0000ff"; /* blue */
+       	        colorname[13] = "#ff00ff"; /* magenta */
+       	        colorname[14] = "#00ffff"; /* cyan */
+       	        colorname[15] = "#ffffff"; /* white */
 
 		defaultfg = 0;
 		defaultbg = 15;
