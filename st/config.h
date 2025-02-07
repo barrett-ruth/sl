@@ -124,54 +124,14 @@ __attribute__((constructor)) void theme() {
 
 	// gruvbox
 	if (theme && strcmp(theme, "gruvbox") == 0) {
-                /* 8 normal colors */
-                colorname[0] = "#282828"; /* hard contrast: #1d2021 / soft contrast: #32302f */
-                colorname[1] = "#ea6962"; /* red     */
-                colorname[2] = "#a9b665"; /* green   */
-                colorname[3] = "#d8a657"; /* yellow  */
-                colorname[4] = "#7daea3"; /* blue    */
-                colorname[5] = "#d3869b"; /* magenta */
-                colorname[6] = "#89b482"; /* cyan    */
-                colorname[7] = "#d4be98"; /* white   */
-
-                /* 8 bright colors */
-                colorname[8] = "#928374";  /* black   */
-                colorname[9] = "#ef938e";  /* red     */
-                colorname[10] = "#bbc585"; /* green   */
-                colorname[11] = "#e1bb7e"; /* yellow  */
-                colorname[12] = "#9dc2ba"; /* blue    */
-                colorname[13] = "#e1acbb"; /* magenta */
-                colorname[14] = "#a7c7a2"; /* cyan    */
-                colorname[15] = "#e2d3ba"; /* white   */
-
 		defaultfg = 15;
 		defaultbg = 0;
 		defaultcs = 15;
 		defaultrcs = 257;
 	} else {
-       	        /* 8 normal colors */
-       	        colorname[0] = "#000000";  /* black */
-       	        colorname[1] = "#b22222";  /* red */
-       	        colorname[2] = "#228b22"; /* green */
-       	        colorname[3] = "#b8860B"; /* orange*/
-       	        colorname[4] = "#27408B"; /* blue */
-       	        colorname[5] = "#8b008B"; /* magenta */
-       	        colorname[6] = "#00bffF"; /* cyan */
-       	        colorname[7] = "#ffffff"; /* white */
-
-                /* 8 bright colors */
-       	        colorname[8] = "#555555"; /* black */
-       	        colorname[9] = "#ff0000"; /* red */
-       	        colorname[10] = "#00ff00"; /* green */
-       	        colorname[11] = "#ffa500"; /* orange */
-       	        colorname[12] = "#0000ff"; /* blue */
-       	        colorname[13] = "#ff00ff"; /* magenta */
-       	        colorname[14] = "#00ffff"; /* cyan */
-       	        colorname[15] = "#ffffff"; /* white */
-
 		defaultfg = 0;
 		defaultbg = 15;
-		defaultcs = 0;
+		defaultcs = 1;
 		defaultrcs = 15;
 	}
 }
@@ -204,6 +164,29 @@ static unsigned int mousebg = 0;
  * doesn't match the ones requested.
  */
 static unsigned int defaultattr = 11;
+
+/*
+ * Xresources preferences to load at startup
+ */
+ResourcePref resources[] = {
+		// { "font",         STRING,  &font },
+		{ "color0",       STRING,  &colorname[0] },
+		{ "color1",       STRING,  &colorname[1] },
+		{ "color2",       STRING,  &colorname[2] },
+		{ "color3",       STRING,  &colorname[3] },
+		{ "color4",       STRING,  &colorname[4] },
+		{ "color5",       STRING,  &colorname[5] },
+		{ "color6",       STRING,  &colorname[6] },
+		{ "color7",       STRING,  &colorname[7] },
+		{ "color8",       STRING,  &colorname[8] },
+		{ "color9",       STRING,  &colorname[9] },
+		{ "color10",      STRING,  &colorname[10] },
+		{ "color11",      STRING,  &colorname[11] },
+		{ "color12",      STRING,  &colorname[12] },
+		{ "color13",      STRING,  &colorname[13] },
+		{ "color14",      STRING,  &colorname[14] },
+		{ "color15",      STRING,  &colorname[15] },
+};
 
 /*
  * Force mouse select/shortcuts while mask is active (when MODE_MOUSE is set).

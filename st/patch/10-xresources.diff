@@ -1,0 +1,211 @@
+diff --git a/dwm/dwm.c b/dwm/dwm.c
+index 7855e65..cffeaa8 100644
+--- a/dwm/dwm.c
++++ b/dwm/dwm.c
+@@ -26,7 +26,6 @@
+ #include <X11/Xutil.h>
+ #include <X11/cursorfont.h>
+ #include <X11/keysym.h>
+-#include <errno.h>
+ #include <locale.h>
+ #include <signal.h>
+ #include <stdarg.h>
+diff --git a/st/config.h b/st/config.h
+index 7960ba5..0d38205 100644
+--- a/st/config.h
++++ b/st/config.h
+@@ -124,51 +124,11 @@ __attribute__((constructor)) void theme() {
+ 
+ 	// gruvbox
+ 	if (theme && strcmp(theme, "gruvbox") == 0) {
+-                /* 8 normal colors */
+-                colorname[0] = "#282828"; /* hard contrast: #1d2021 / soft contrast: #32302f */
+-                colorname[1] = "#ea6962"; /* red     */
+-                colorname[2] = "#a9b665"; /* green   */
+-                colorname[3] = "#d8a657"; /* yellow  */
+-                colorname[4] = "#7daea3"; /* blue    */
+-                colorname[5] = "#d3869b"; /* magenta */
+-                colorname[6] = "#89b482"; /* cyan    */
+-                colorname[7] = "#d4be98"; /* white   */
+-
+-                /* 8 bright colors */
+-                colorname[8] = "#928374";  /* black   */
+-                colorname[9] = "#ef938e";  /* red     */
+-                colorname[10] = "#bbc585"; /* green   */
+-                colorname[11] = "#e1bb7e"; /* yellow  */
+-                colorname[12] = "#9dc2ba"; /* blue    */
+-                colorname[13] = "#e1acbb"; /* magenta */
+-                colorname[14] = "#a7c7a2"; /* cyan    */
+-                colorname[15] = "#e2d3ba"; /* white   */
+-
+ 		defaultfg = 15;
+ 		defaultbg = 0;
+ 		defaultcs = 15;
+ 		defaultrcs = 257;
+ 	} else {
+-       	        /* 8 normal colors */
+-       	        colorname[0] = "#000000";  /* black */
+-       	        colorname[1] = "#b22222";  /* red */
+-       	        colorname[2] = "#228b22"; /* green */
+-       	        colorname[3] = "#b8860B"; /* orange*/
+-       	        colorname[4] = "#27408B"; /* blue */
+-       	        colorname[5] = "#8b008B"; /* magenta */
+-       	        colorname[6] = "#00bffF"; /* cyan */
+-       	        colorname[7] = "#ffffff"; /* white */
+-
+-                /* 8 bright colors */
+-       	        colorname[8] = "#555555"; /* black */
+-       	        colorname[9] = "#ff0000"; /* red */
+-       	        colorname[10] = "#00ff00"; /* green */
+-       	        colorname[11] = "#ffa500"; /* orange */
+-       	        colorname[12] = "#0000ff"; /* blue */
+-       	        colorname[13] = "#ff00ff"; /* magenta */
+-       	        colorname[14] = "#00ffff"; /* cyan */
+-       	        colorname[15] = "#ffffff"; /* white */
+-
+ 		defaultfg = 0;
+ 		defaultbg = 15;
+ 		defaultcs = 0;
+@@ -205,6 +165,29 @@ static unsigned int mousebg = 0;
+  */
+ static unsigned int defaultattr = 11;
+ 
++/*
++ * Xresources preferences to load at startup
++ */
++ResourcePref resources[] = {
++		// { "font",         STRING,  &font },
++		{ "color0",       STRING,  &colorname[0] },
++		{ "color1",       STRING,  &colorname[1] },
++		{ "color2",       STRING,  &colorname[2] },
++		{ "color3",       STRING,  &colorname[3] },
++		{ "color4",       STRING,  &colorname[4] },
++		{ "color5",       STRING,  &colorname[5] },
++		{ "color6",       STRING,  &colorname[6] },
++		{ "color7",       STRING,  &colorname[7] },
++		{ "color8",       STRING,  &colorname[8] },
++		{ "color9",       STRING,  &colorname[9] },
++		{ "color10",      STRING,  &colorname[10] },
++		{ "color11",      STRING,  &colorname[11] },
++		{ "color12",      STRING,  &colorname[12] },
++		{ "color13",      STRING,  &colorname[13] },
++		{ "color14",      STRING,  &colorname[14] },
++		{ "color15",      STRING,  &colorname[15] },
++};
++
+ /*
+  * Force mouse select/shortcuts while mask is active (when MODE_MOUSE is set).
+  * Note that if you want to use ShiftMask with selmasks, set this to an other
+diff --git a/st/x.c b/st/x.c
+index 4766399..719afad 100644
+--- a/st/x.c
++++ b/st/x.c
+@@ -14,6 +14,7 @@
+ #include <X11/keysym.h>
+ #include <X11/Xft/Xft.h>
+ #include <X11/XKBlib.h>
++#include <X11/Xresource.h>
+ 
+ char *argv0;
+ #include "arg.h"
+@@ -45,6 +46,19 @@ typedef struct {
+ 	signed char appcursor; /* application cursor */
+ } Key;
+ 
++/* Xresources preferences */
++enum resource_type {
++	STRING = 0,
++	INTEGER = 1,
++	FLOAT = 2
++};
++
++typedef struct {
++	char *name;
++	enum resource_type type;
++	void *dst;
++} ResourcePref;
++
+ /* Undercurl slope types */
+ enum undercurl_slope_type {
+ 	UNDERCURL_SLOPE_ASCENDING = 0,
+@@ -1149,8 +1163,6 @@ xinit(int cols, int rows)
+ 	pid_t thispid = getpid();
+ 	XColor xmousefg, xmousebg;
+ 
+-	if (!(xw.dpy = XOpenDisplay(NULL)))
+-		die("can't open display\n");
+ 	xw.scr = XDefaultScreen(xw.dpy);
+ 	xw.vis = XDefaultVisual(xw.dpy, xw.scr);
+ 
+@@ -2228,6 +2240,59 @@ run(void)
+ 	}
+ }
+ 
++int
++resource_load(XrmDatabase db, char *name, enum resource_type rtype, void *dst)
++{
++	char **sdst = dst;
++	int *idst = dst;
++	float *fdst = dst;
++
++	char fullname[256];
++	char fullclass[256];
++	char *type;
++	XrmValue ret;
++
++	snprintf(fullname, sizeof(fullname), "%s.%s",
++			opt_name ? opt_name : termname, name);
++	snprintf(fullclass, sizeof(fullclass), "%s.%s",
++			opt_class ? opt_class : "St", name);
++	fullname[sizeof(fullname) - 1] = fullclass[sizeof(fullclass) - 1] = '\0';
++
++	XrmGetResource(db, fullname, fullclass, &type, &ret);
++	if (ret.addr == NULL || strncmp("String", type, 64))
++		return 1;
++
++	switch (rtype) {
++	case STRING:
++		*sdst = ret.addr;
++		break;
++	case INTEGER:
++		*idst = strtoul(ret.addr, NULL, 10);
++		break;
++	case FLOAT:
++		*fdst = strtof(ret.addr, NULL);
++		break;
++	}
++	return 0;
++}
++
++void
++config_init(void)
++{
++	char *resm;
++	XrmDatabase db;
++	ResourcePref *p;
++
++	XrmInitialize();
++	resm = XResourceManagerString(xw.dpy);
++	if (!resm)
++		return;
++
++	db = XrmGetStringDatabase(resm);
++	for (p = resources; p < resources + LEN(resources); p++)
++		resource_load(db, p->name, p->type, p->dst);
++}
++
+ void
+ usage(void)
+ {
+@@ -2301,6 +2366,11 @@ run:
+ 
+ 	setlocale(LC_CTYPE, "");
+ 	XSetLocaleModifiers("");
++
++	if (!(xw.dpy = XOpenDisplay(NULL)))
++		die("can't open display\n");
++
++	config_init();
+ 	cols = MAX(cols, 1);
+ 	rows = MAX(rows, 1);
+ 	tnew(cols, rows);
