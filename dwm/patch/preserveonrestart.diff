@@ -1,0 +1,93 @@
+diff --git a/dwm/config.h b/dwm/config.h
+index 61f8ae0..2dca7b9 100644
+--- a/dwm/config.h
++++ b/dwm/config.h
+@@ -3,6 +3,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
++#include "selfrestart.c"
+ 
+ /* appearance */
+ static const unsigned int borderpx = 5; /* border pixel of windows */
+@@ -126,8 +127,8 @@ static Key keys[] = {
+     {MODKEYC, XK_period, tagfocusmon, {.i = +1}},
+ 
+     {MODKEY, XK_q, killclient, {0}},
+-
+     {MODKEYS, XK_q, quit, {0}},
++    {MODKEYS, XK_r, self_restart, {0}},
+ 
+     TAGKEYS(XK_1, 0) TAGKEYS(XK_2, 1) TAGKEYS(XK_3, 2) TAGKEYS(XK_4, 3)
+         TAGKEYS(XK_5, 4) TAGKEYS(XK_6, 5) TAGKEYS(XK_7, 6) TAGKEYS(XK_8, 7)
+diff --git a/dwm/selfrestart.c b/dwm/selfrestart.c
+new file mode 100644
+index 0000000..9659645
+--- /dev/null
++++ b/dwm/selfrestart.c
+@@ -0,0 +1,65 @@
++#include <stdio.h>
++#include <stdlib.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++#include <unistd.h>
++
++/**
++ * Magically finds the current's executable path
++ *
++ * I'm doing the do{}while(); trick because Linux (what I'm running) is not
++ * POSIX compilant and so lstat() cannot be trusted on /proc entries
++ *
++ * @return char* the path of the current executable
++ */
++char *get_dwm_path() {
++  struct stat s;
++  int r, length, rate = 42;
++  char *path = NULL;
++
++  if (lstat("/proc/self/exe", &s) == -1) {
++    perror("lstat:");
++    return NULL;
++  }
++
++  length = s.st_size + 1 - rate;
++
++  do {
++    length += rate;
++
++    free(path);
++    path = malloc(sizeof(char) * length);
++
++    if (path == NULL) {
++      perror("malloc:");
++      return NULL;
++    }
++
++    r = readlink("/proc/self/exe", path, length);
++
++    if (r == -1) {
++      perror("readlink:");
++      return NULL;
++    }
++  } while (r >= length);
++
++  path[r] = '\0';
++
++  return path;
++}
++
++/**
++ * self-restart
++ *
++ * Initially inspired by: Yu-Jie Lin
++ * https://sites.google.com/site/yjlnotes/notes/dwm
++ */
++void self_restart(const Arg *arg) {
++  char *const argv[] = {get_dwm_path(), NULL};
++
++  if (argv[0] == NULL) {
++    return;
++  }
++
++  execv(argv[0], argv);
++}
