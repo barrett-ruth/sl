@@ -10,7 +10,7 @@ static const unsigned int borderpx = 5; /* border pixel of windows */
 static const unsigned int snap = 32;    /* snap pixel */
 static const int showbar = 0;           /* 0 means no bar */
 static const int topbar = 1;            /* 0 means bottom bar */
-static const char *fonts[] = {"Gravitica Mono:size=14"};
+static const char *fonts[] = {"Gravitica Mono:size=17"};
 static const char *colors[2][3];
 
 __attribute__((constructor)) void theme() {
@@ -128,7 +128,7 @@ static Key keys[] = {
 
     {MODKEY, XK_q, killclient, {0}},
     {MODKEYS, XK_q, quit, {0}},
-    {MODKEYS, XK_r, self_restart, {0}},
+    {MODKEYS, XK_r, self_restart, {.i=1}},
 
     TAGKEYS(XK_1, 0) TAGKEYS(XK_2, 1) TAGKEYS(XK_3, 2) TAGKEYS(XK_4, 3)
         TAGKEYS(XK_5, 4) TAGKEYS(XK_6, 5) TAGKEYS(XK_7, 6) TAGKEYS(XK_8, 7)

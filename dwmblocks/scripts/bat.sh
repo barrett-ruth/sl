@@ -5,6 +5,9 @@ filler_icon='/usr/share/icons/Adwaita/16x16/status/airplane-mode-symbolic.symbol
 
 bat="$(cat /sys/class/power_supply/BAT0/capacity)"
 status="$(cat /sys/class/power_supply/BAT0/status)"
+status_symbol=-
+[ "$status" = "Charging" ] && status_symbol=+
+[ "$status" = "Full" ] && status_symbol=
 
 if [ "$status" = "Discharging" ]; then
   if [ "$bat" -eq 30 ] && ! grep -q "^30$" "$STATE_FILE" 2>/dev/null; then
@@ -20,6 +23,6 @@ else
   true>"$STATE_FILE" 2>/dev/null
 fi
 
-[ -n "$bat" ] && echo "$bat% | "
+[ -n "$bat" ] && echo "$status_symbol$bat% | "
 
-unset bat status
+unset bat status status_symbol
