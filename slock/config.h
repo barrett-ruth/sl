@@ -21,4 +21,4 @@ static const char *colorname[NUMCOLS] = {
 static const int failonclear = 1;
 
 /* Background image path, should be available to the user above */
-static const char *background_image = "/home/barrett/dev/sl/slock/lock.jpg";
+static const char *background_image = "/home/sigill/dev/sl/slock/lock.jpg";

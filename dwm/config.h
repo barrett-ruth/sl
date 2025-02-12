@@ -88,7 +88,7 @@ static Key keys[] = {
     {MODKEYS, XK_c, spawn, SHCMD("chromium")},
     {MODKEYS, XK_d, spawn, SHCMD("discord")},
     {MODKEYS, XK_s, spawn, SHCMD("slack")},
-    {MODKEYS, XK_Return, spawn, SHCMD("st")},
+    {MODKEYS, XK_Return, spawn, SHCMD("ghostty")},
     {MODKEY, XK_space, spawn, SHCMD("dmenu_run")},
 
     {0, XF86XK_MonBrightnessUp, spawn, SHCMD("brightnessctl set 10%+")},

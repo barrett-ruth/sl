@@ -15,7 +15,7 @@ dwmblocks: dwmb.c config.h
 	${CC} -o dwmblocks dwmb.c ${CFLAGS} ${LDFLAGS} -DSCRIPT'(s)="\"$(shell pwd)/scripts/\""s'
 
 clean:
-	rm -f *.o *.gch dwmb
+	rm -f *.o *.gch dwmblocks
 
 install: dwmblocks
 	mkdir -p ${DESTDIR}${PREFIX}/bin
