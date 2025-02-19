@@ -1279,9 +1279,7 @@ void propertynotify(XEvent *e) {
   }
 }
 
-void quit(const Arg *arg) {
-  running = 0;
-}
+void quit(const Arg *arg) { running = 0; }
 
 Monitor *recttomon(int x, int y, int w, int h) {
   Monitor *m, *r = selmon;
@@ -1714,8 +1712,17 @@ void tagview(const Arg *arg) {
 }
 
 void tagfocusmon(const Arg *arg) {
-  tagmon(arg);
+  if (!selmon->sel || !mons->next)
+    return;
+  unsigned int saved_tag = selmon->sel->tags;
+  Monitor *target_mon = dirtomon(arg->i);
+  unsigned int target_mon_tag = target_mon->tagset[target_mon->seltags];
+  target_mon->tagset[target_mon->seltags] = saved_tag;
+  sendmon(selmon->sel, target_mon);
+  target_mon->tagset[target_mon->seltags] = target_mon_tag;
   focusmon(arg);
+  Arg tag_arg = {.ui = saved_tag};
+  view(&tag_arg);
 }
 
 void tile(Monitor *m) {
