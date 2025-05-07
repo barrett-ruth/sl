@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "selfrestart.c"
+#define SESSION_FILE "/tmp/dwm-session"
 
 /* appearance */
 static const unsigned int borderpx = 5; /* border pixel of windows */
@@ -128,7 +128,7 @@ static Key keys[] = {
 
     {MODKEY, XK_q, killclient, {0}},
     {MODKEYS, XK_q, quit, {0}},
-    {MODKEYS, XK_r, self_restart, {.i = 1}},
+    {MODKEYS, XK_r, quit, {1}},
 
     TAGKEYS(XK_1, 0) TAGKEYS(XK_2, 1) TAGKEYS(XK_3, 2) TAGKEYS(XK_4, 3)
         TAGKEYS(XK_5, 4) TAGKEYS(XK_6, 5) TAGKEYS(XK_7, 6) TAGKEYS(XK_8, 7)
