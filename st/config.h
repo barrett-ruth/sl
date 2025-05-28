@@ -1,6 +1,4 @@
 /* See LICENSE file for copyright and license details. */
-#include <stdlib.h>
-#include <string.h>
 
 /*
  * appearance
@@ -8,6 +6,10 @@
  * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
  */
 static char *font = "Berkeley Mono:pixelsize=20:antialias=true:autohint=true";
+/* Spare fonts */
+static char *font2[] = {
+	"JoyPixels:pixelsize=20:antialias=true:autohint=true",
+};
 static int borderpx = 0;
 
 /*
@@ -59,6 +61,12 @@ static double minlatency = 2;
 static double maxlatency = 33;
 
 /*
+ * Synchronized-Update timeout in ms
+ * https://gitlab.com/gnachman/iterm2/-/wikis/synchronized-updates-spec
+ */
+static uint su_timeout = 200;
+
+/*
  * blinking timeout (set to 0 to disable blinking) for the terminal blinking
  * attribute.
  */
@@ -75,11 +83,11 @@ static unsigned int cursorthickness = 2;
  *    Bold affects lines thickness if boxdraw_bold is not 0. Italic is ignored.
  * 0: disable (render all U25XX glyphs normally from the font).
  */
-const int boxdraw = 0;
-const int boxdraw_bold = 0;
+const int boxdraw = 1;
+const int boxdraw_bold = 1;
 
 /* braille (U28XX):  1: render as adjacent "pixels",  0: use font */
-const int boxdraw_braille = 0;
+const int boxdraw_braille = 1;
 
 /*
  * bell volume. It must be a value between -100 and 100. Use 0 for disabling
@@ -108,33 +116,45 @@ char *termname = "st-256color";
 unsigned int tabspaces = 8;
 
 /* Terminal colors (16 first used in escape sequence) */
-static const char *colorname[16];
+static const char *colorname[] = {
+	/* 8 normal colors */
+	"black",
+	"red3",
+	"green3",
+	"yellow3",
+	"blue2",
+	"magenta3",
+	"cyan3",
+	"gray90",
+
+	/* 8 bright colors */
+	"gray50",
+	"red",
+	"green",
+	"yellow",
+	"#5c5cff",
+	"magenta",
+	"cyan",
+	"white",
+
+	[255] = 0,
+
+	/* more colors can be added after 255 to use with DefaultXX */
+	"#cccccc",
+	"#555555",
+	"gray90", /* default foreground colour */
+	"black", /* default background colour */
+};
+
 
 /*
  * Default colors (colorname index)
  * foreground, background, cursor, reverse cursor
  */
-unsigned int defaultfg;
-unsigned int defaultbg;
-unsigned int defaultcs;
-static unsigned int defaultrcs;
-
-__attribute__((constructor)) void theme() {
-	const char *theme = getenv("THEME");
-
-	// gruvbox
-	if (theme && strcmp(theme, "gruvbox") == 0) {
-		defaultfg = 15;
-		defaultbg = 0;
-		defaultcs = 15;
-		defaultrcs = 257;
-	} else {
-		defaultfg = 0;
-		defaultbg = 15;
-		defaultcs = 1;
-		defaultrcs = 15;
-	}
-}
+unsigned int defaultfg = 0;
+unsigned int defaultbg = 15;
+unsigned int defaultcs = 1;
+static unsigned int defaultrcs = 15;
 
 /*
  * Default shape of cursor
@@ -166,29 +186,6 @@ static unsigned int mousebg = 0;
 static unsigned int defaultattr = 11;
 
 /*
- * Xresources preferences to load at startup
- */
-ResourcePref resources[] = {
-		// { "font",         STRING,  &font },
-		{ "color0",       STRING,  &colorname[0] },
-		{ "color1",       STRING,  &colorname[1] },
-		{ "color2",       STRING,  &colorname[2] },
-		{ "color3",       STRING,  &colorname[3] },
-		{ "color4",       STRING,  &colorname[4] },
-		{ "color5",       STRING,  &colorname[5] },
-		{ "color6",       STRING,  &colorname[6] },
-		{ "color7",       STRING,  &colorname[7] },
-		{ "color8",       STRING,  &colorname[8] },
-		{ "color9",       STRING,  &colorname[9] },
-		{ "color10",      STRING,  &colorname[10] },
-		{ "color11",      STRING,  &colorname[11] },
-		{ "color12",      STRING,  &colorname[12] },
-		{ "color13",      STRING,  &colorname[13] },
-		{ "color14",      STRING,  &colorname[14] },
-		{ "color15",      STRING,  &colorname[15] },
-};
-
-/*
  * Force mouse select/shortcuts while mask is active (when MODE_MOUSE is set).
  * Note that if you want to use ShiftMask with selmasks, set this to an other
  * modifier, set to 0 to not use it.
@@ -201,41 +198,38 @@ static uint forcemousemod = ShiftMask;
  */
 static MouseShortcut mshortcuts[] = {
 	/* mask                 button   function        argument       release */
-        {ShiftMask, Button4, ttysend, {.s = "\033[5;2~"}},
-        {ShiftMask, Button5, ttysend, {.s = "\033[6;2~"}},
-        {XK_ANY_MOD, Button4, kscrollup, {.i = 3}, 0},
-        {XK_ANY_MOD, Button5, kscrolldown, {.i = 3}, 0},
+	{ XK_ANY_MOD,           Button4, kscrollup,      {.i = 1}},
+	{ XK_ANY_MOD,           Button5, kscrolldown,    {.i = 1}},
+	{ XK_ANY_MOD,           Button2, selpaste,       {.i = 0},      1 },
+	{ ShiftMask,            Button4, ttysend,        {.s = "\033[5;2~"} },
+	{ XK_ANY_MOD,           Button4, ttysend,        {.s = "\031"} },
+	{ ShiftMask,            Button5, ttysend,        {.s = "\033[6;2~"} },
+	{ XK_ANY_MOD,           Button5, ttysend,        {.s = "\005"} },
 };
 
 /* Internal keyboard shortcuts. */
+#define MODKEY Mod1Mask
 #define TERMMOD Mod1Mask
 #define TERMMODS TERMMOD | ShiftMask
-#define SCRIPT Mod3Mask
-
-#define SHCMD(cmd)                                                             \
-  {                                                                            \
-    .v = (const char *[]) { "/bin/sh", "-c", cmd, NULL }                       \
-  }
 
 static Shortcut shortcuts[] = {
 	/* mask                 keysym          function        argument */
-        // Copy-paste
-        {TERMMOD, XK_y, clipcopy, {.i = 0}},
-        {TERMMOD, XK_p, clippaste, {.i = 0}},
-
-        // Zoom
+	{ XK_ANY_MOD,           XK_Break,       sendbreak,      {.i =  0} },
+	{ ControlMask,          XK_Print,       toggleprinter,  {.i =  0} },
+	{ ShiftMask,            XK_Print,       printscreen,    {.i =  0} },
+	{ XK_ANY_MOD,           XK_Print,       printsel,       {.i =  0} },
         {TERMMODS, XK_H, zoom, {.f = -5}},
         {TERMMODS, XK_L, zoom, {.f = +5}},
-
-        // Scroll
+	{ TERMMOD,              XK_Home,        zoomreset,      {.f =  0} },
+        {TERMMOD, XK_y, clipcopy, {.i = 0}},
+        {TERMMOD, XK_p, clippaste, {.i = 0}},
+	{ TERMMOD,              XK_Y,           selpaste,       {.i =  0} },
+	{ ShiftMask,            XK_Insert,      selpaste,       {.i =  0} },
+	{ TERMMOD,              XK_Num_Lock,    numlock,        {.i =  0} },
         {TERMMOD, XK_j, kscrolldown, {.i = 9}},
         {TERMMOD, XK_k, kscrollup, {.i = 9}},
         {TERMMODS, XK_J, kscrolldown, {.i = 18}},
         {TERMMODS, XK_K, kscrollup, {.i = 18}},
-
-        // Urls
-        {SCRIPT, XK_y, externalpipe, SHCMD("url copy")},
-        {SCRIPT, XK_o, externalpipe, SHCMD("url open")},
 };
 
 /*
@@ -276,7 +270,7 @@ static uint ignoremod = Mod2Mask|XK_SWITCH_MOD;
  * world. Please decide about changes wisely.
  */
 static Key key[] = {
-	{ XK_Super_L, XK_ANY_MOD, "", 0, 0},
+	{ XK_Super_L, XK_ANY_MOD, "", 0, 0},
 	/* keysym           mask            string      appkey appcursor */
 	{ XK_KP_Home,       ShiftMask,      "\033[2J",       0,   -1},
 	{ XK_KP_Home,       ShiftMask,      "\033[1;2H",     0,   +1},
@@ -509,4 +503,13 @@ static char ascii_printable[] =
 	"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
 	"`abcdefghijklmnopqrstuvwxyz{|}~";
 
-#define UNDERCURL_STYLE 1 // spiky
+/*
+ * Open urls starting with urlprefixes, contatining urlchars
+ * by passing as ARG1 to urlhandler.
+ */
+char* urlhandler = "xdg-open";
+char urlchars[] =
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	"abcdefghijklmnopqrstuvwxyz"
+	"0123456789-._~:/?#@!$&'*+,;=%";
+char* urlprefixes[] = {"http://", "https://", NULL};

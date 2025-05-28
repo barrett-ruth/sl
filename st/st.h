@@ -11,7 +11,8 @@
 #define DIVCEIL(n, d)		(((n) + ((d) - 1)) / (d))
 #define DEFAULT(a, b)		(a) = (a) ? (a) : (b)
 #define LIMIT(x, a, b)		(x) = (x) < (a) ? (a) : (x) > (b) ? (b) : (x)
-#define ATTRCMP(a, b)		((a).mode != (b).mode || (a).fg != (b).fg || \
+#define ATTRCMP(a, b)		(((a).mode & (~ATTR_WRAP)) != ((b).mode & (~ATTR_WRAP)) || \
+				(a).fg != (b).fg || \
 				(a).bg != (b).bg)
 #define TIMEDIFF(t1, t2)	((t1.tv_sec-t2.tv_sec)*1000 + \
 				(t1.tv_nsec-t2.tv_nsec)/1E6)
@@ -21,23 +22,30 @@
 #define IS_TRUECOL(x)		(1 << 24 & (x))
 
 enum glyph_attribute {
-	ATTR_NULL           = 0,
-	ATTR_SET            = 1 << 0,
-	ATTR_BOLD           = 1 << 1,
-	ATTR_FAINT          = 1 << 2,
-	ATTR_ITALIC         = 1 << 3,
-	ATTR_UNDERLINE      = 1 << 4,
-	ATTR_BLINK          = 1 << 5,
-	ATTR_REVERSE        = 1 << 6,
-	ATTR_INVISIBLE      = 1 << 7,
-	ATTR_STRUCK         = 1 << 8,
-	ATTR_WRAP           = 1 << 9,
-	ATTR_WIDE           = 1 << 10,
-	ATTR_WDUMMY         = 1 << 11,
-	ATTR_SELECTED       = 1 << 12,
-	ATTR_BOXDRAW        = 1 << 13,
-	ATTR_BOLD_FAINT     = ATTR_BOLD | ATTR_FAINT,
-	ATTR_DIRTYUNDERLINE = 1 << 14,
+	ATTR_NULL       = 0,
+	ATTR_SET        = 1 << 0,
+	ATTR_BOLD       = 1 << 1,
+	ATTR_FAINT      = 1 << 2,
+	ATTR_ITALIC     = 1 << 3,
+	ATTR_UNDERLINE  = 1 << 4,
+	ATTR_BLINK      = 1 << 5,
+	ATTR_REVERSE    = 1 << 6,
+	ATTR_INVISIBLE  = 1 << 7,
+	ATTR_STRUCK     = 1 << 8,
+	ATTR_WRAP       = 1 << 9,
+	ATTR_WIDE       = 1 << 10,
+	ATTR_WDUMMY     = 1 << 11,
+	ATTR_BOXDRAW    = 1 << 12,
+	ATTR_SELECTED   = 1 << 13,
+	ATTR_URL        = 1 << 14,
+	ATTR_BOLD_FAINT = ATTR_BOLD | ATTR_FAINT,
+	ATTR_DIRTYUNDERLINE = 1 << 15,
+};
+
+enum drawing_mode {
+	DRAW_NONE = 0,
+	DRAW_BG = 1 << 0,
+	DRAW_FG = 1 << 1,
 };
 
 enum selection_mode {
@@ -96,8 +104,8 @@ void sendbreak(const Arg *);
 void toggleprinter(const Arg *);
 
 int tattrset(int);
+int tisaltscr(void);
 void tnew(int, int);
-int tisaltscreen(void);
 void tresize(int, int);
 void tsetdirtattr(int);
 void ttyhangup(void);
@@ -114,6 +122,10 @@ void selstart(int, int, int);
 void selextend(int, int, int, int);
 int selected(int, int);
 char *getsel(void);
+
+void highlighturlsline(int);
+void unhighlighturlsline(int);
+int followurl(int, int);
 
 size_t utf8encode(Rune, char *);
 
@@ -142,4 +154,8 @@ extern unsigned int tabspaces;
 extern unsigned int defaultfg;
 extern unsigned int defaultbg;
 extern unsigned int defaultcs;
+extern char *urlhandler;
+extern char urlchars[];
+extern char *urlprefixes[];
+extern int nurlprefixes;
 extern const int boxdraw, boxdraw_bold, boxdraw_braille;

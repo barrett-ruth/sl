@@ -7,7 +7,7 @@ Subject: [PATCH] [st][patch][boxdraw] update to 0.8.5
  Makefile       |   3 +-
  boxdraw.c      | 194 ++++++++++++++++++++++++++++++++++++++++++++
  boxdraw_data.h | 214 +++++++++++++++++++++++++++++++++++++++++++++++++
- config.h   |  12 +++
+ config.def.h   |  12 +++
  st.c           |   3 +
  st.h           |  10 +++
  x.c            |  21 +++--
@@ -456,10 +456,10 @@ index 0000000..7890500
 +	/* U+2504 - U+250B, U+254C - U+254F: unsupported (dashes) */
 +	/* U+2571 - U+2573: unsupported (diagonals) */
 +};
-diff --git a/config.h b/config.h
+diff --git a/config.def.h b/config.def.h
 index 91ab8ca..7bb3ff7 100644
---- a/config.h
-+++ b/config.h
+--- a/config.def.h
++++ b/config.def.h
 @@ -67,6 +67,18 @@ static unsigned int blinktimeout = 800;
   */
  static unsigned int cursorthickness = 2;
